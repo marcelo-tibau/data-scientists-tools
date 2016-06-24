@@ -1,2 +1,2 @@
 # data-scientists-tools
-Repo of my Coursera's specialization. This is the first module.
+This is my "toolkit" repo. I use it to share files. 
