@@ -2,8 +2,8 @@ library('leaflet')
 
 RJ_Icon <- makeIcon(
   iconUrl = "https://tibaudotorg.files.wordpress.com/2016/12/location_orange_icon.png",
-  iconWidth = 65*215/230, iconHeight = 65,
-  iconAnchorX = 65*215/230/2, iconAnchorY = 65
+  iconWidth = 60*215/230, iconHeight = 60,
+  iconAnchorX = 60*215/230/2, iconAnchorY = 20
 )
 
 #https://tibaudotorg.files.wordpress.com/2016/12/location_orange_icon.png
@@ -24,4 +24,9 @@ RJ_Sites <- c(
 RJ_Lat_Long %>%
   leaflet() %>%
   addTiles() %>%
-  addMarkers(icon = RJ_Icon, popup = RJ_Sites)
+  addMarkers(icon = RJ_Icon, popup = RJ_Sites) %>%
+  addLegend(
+    position = 'topright',
+    colors = "white", labels = "December 22, 2016 - by Marcelo Tibau", opacity = 0,
+    title = 'Rio de Janeiro Tour Sites'
+  )
