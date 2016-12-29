@@ -1,3 +1,7 @@
+# The idea is to create a new measurement unit we can plot across time for each time that summarizes
+# how efficient each team in their spending.
+# We'll use the number of wins a team can get per dollar
+
 library('Lahman')
 data("Salaries")
 data("Teams")
@@ -30,32 +34,41 @@ moneyball <- data.frame(yearID = total_payroll$yearID, teamID = total_payroll$te
 
 # Saving the data frame as a new data set
 
-write.csv(moneyball, file = "moneyball.csv")
+# write.csv(moneyball, file = "moneyball.csv")
+
+# data <- read.csv("moneyball.csv")
 
 # Calculate the number of wins per dollar spent on payroll for each team in each year:
 # wpd_ij = wins_ij/payroll_ij
 
-data <- read.csv("moneyball.csv")
+moneyball$WperDollar <- (moneyball$W/moneyball$salary)
 
+moneyball$win_percentage <- (moneyball$W/moneyball$G)
 
+moneyball2 <- moneyball %>%
+  group_by(teamID)
 
+avgStatsPerYear <- moneyball %>%
+  group_by(teamID) %>%
+  summarise(averagePayinYears = mean(salary),
+            averageWininYears = mean(win_percentage))
 
-library('dplyr')
+library(ggplot2)
+library(digest)
 
-library(dplyr)
-lahman_con <- src_sqlite("/home/ids_materials/lahman_sqlite/lahman2014.sqlite")
-
-# let's calculate total payroll per year for the Americal League (AL)
-# save the query as a string
-salary_query <- 
-  "SELECT yearID, sum(salary) as total_payroll 
-   FROM Salaries 
-   WHERE lgID == 'AL'
-   GROUP BY yearID"
-
-# send the query to the database
-query_result <- lahman_con %>% tbl(sql(salary_query))
-
-# at this point the query is not computed completely. To load the result
-# of the query as a table in R use the collect function
-result <- collect(query_result)
+avgStatsPerYear %>%
+  ggplot(aes(x=averagePayinYears, y=averageWininYears)) +
+  geom_point(aes(colour=ifelse(teamID=="NYA", 'NYA as', "Other Teams"))) +
+  xlab("Average Team Payroll") +
+  ylab("Average Winning Percentage") +
+  ggtitle("Your Team Spending Efficency 2014-2015") +
+  geom_smooth(method = 'lm') +
+  labs(colour="Team") +
+  theme(text = element_text(),
+        axis.text = element_text(angle = 90, vjust = 1))
+  
+#avgStatsPerYear2 <- moneyball %>%
+ # group_by(yearID,teamID) %>%
+#  summarise(averagePayinYears = mean(salary),
+ #           averageWininYears = mean(win_percentage))
+ 
