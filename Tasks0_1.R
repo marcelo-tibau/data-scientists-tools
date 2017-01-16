@@ -9,6 +9,7 @@ library("stringi")
 library('filehash')
 library('scales')
 library('rJava')
+library('wordcloud')
 
 ## Task 0: Understanding the Problem
 
@@ -61,7 +62,80 @@ uni.g.sorted <- uni.g[order(uni.g$Freq, decreasing = TRUE),]
 uni.g.sorted[1:30,]
 
 
+## Task 2: Exploratory Data Analysis
+
+# Two-Gram Tokenization.
+two.gram.toke <- NGramTokenizer(Corpus, Weka_control(min = 2, max = 2))
+two.g <- data.frame(table(two.gram.toke))
+two.g.sort <- two.g[order(two.g$Freq, decreasing = TRUE),]
+two.g.sort[1:30,]
+
+# Three-Gram Tokenization.
+three.gram.toke <- NGramTokenizer(Corpus, Weka_control(min = 3, max = 3))
+three.g <- data.frame(table(three.gram.toke))
+three.g.sort <- three.g[order(three.g$Freq, decreasing = TRUE),]
+three.g.sort[1:30,]
+
+## Creating a wordcloud
+
+par(mfrow = c(1,2))
+wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
+wordcloud(three.g.sort[,1], freq = three.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
+
+
 
 # C:/Users/Marcelo/Documents/Work/Casa - Pessoal/0_Project CP/Study/MESTRADO/Coursera/Data_Science/10_Data-Science-Capstone/Coursera-SwiftKey/final/en_US/
 # options(java.parameters = "-Xmx4g")
 # options(java.parameters = "-XX: MaxPermSize")
+
+# Quizz 1 - Q.3
+
+fileName <- "en_US.blogs.txt"
+con <- file(fileName, open = 'r')
+lineBlogs <- readLines(con)
+longBlogs <- length(lineBlogs)
+close(con)
+
+fileName <- "en_US.news.txt"
+con <- file(fileName, open = 'r')
+lineNews <- readLines(con)
+longNews <- length(lineNews)
+close(con)
+
+fileName <- "en_US.twitter.txt"
+con <- file(fileName, open = 'r')
+lineTwitter <- readLines(con)
+longTwitter <- length(lineTwitter)
+close(con)
+
+
+
+require(stringi)
+longBlogs<-stri_length(lineBlogs)
+max(longBlogs)
+
+longNews <- stri_length(lineNews)
+max(longNews)
+
+longTwitter <- stri_length(lineTwitter)
+max(longTwitter)
+
+# Q.4
+
+loveTwitter <- grep("love", lineTwitter)
+length(loveTwitter)
+
+hateTwitter <- grep("hate", lineTwitter)
+length(hateTwitter)
+
+dividelovehate <- length(loveTwitter)/length(hateTwitter)
+
+# Q.5
+
+biostatsTwitter <- grep("biostats", lineTwitter)
+lineTwitter[biostatsTwitter]
+
+# Q.6
+senteceTwitter <- grep("A computer once beat me at chess, but it was no match for me at kickboxing", lineTwitter)
+length(senteceTwitter)
+
