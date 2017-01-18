@@ -52,6 +52,7 @@ Corpus <- tm_map(Corpus, removeNumbers)
 Corpus <- tm_map(Corpus, stripWhitespace)
 Corpus <- tm_map(Corpus, PlainTextDocument)
 
+-
 # An N-Gram refers to the number of words in a string.
 # I focuse on a Tri-gram model. The basic building blocks of that model are Uni-grams, Bi-grams, and Tri-grams.
 
@@ -68,12 +69,19 @@ uni.g.sorted[1:30,]
 two.gram.toke <- NGramTokenizer(Corpus, Weka_control(min = 2, max = 2))
 two.g <- data.frame(table(two.gram.toke))
 two.g.sort <- two.g[order(two.g$Freq, decreasing = TRUE),]
-two.g.sort[1:30,]
+
 
 # Three-Gram Tokenization.
 three.gram.toke <- NGramTokenizer(Corpus, Weka_control(min = 3, max = 3))
 three.g <- data.frame(table(three.gram.toke))
 three.g.sort <- three.g[order(three.g$Freq, decreasing = TRUE),]
+
+
+# Most popular non-stop words in the n-gram samples:
+head(two.g.sort, n=10)
+two.g.sort[1:30,]
+
+head(three.g.sort, n=10)
 three.g.sort[1:30,]
 
 ## Creating a wordcloud
