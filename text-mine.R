@@ -9,7 +9,8 @@ opts_chunk$set(cache = TRUE)
 
 data <- c('blogs', 'news', 'twitter')
 sample_data <- paste0(data, '.sample10')
-pathname <- "~Coursera/Data_Science/10_Data-Science-Capstone/Coursera-SwiftKey/final/en_US"
+write(sample_data)
+pathname <- "C:/Users/Marcelo/Documents/Work/Casa - Pessoal/0_Project CP/Study/MESTRADO/Coursera/Data_Science/10_Data-Science-Capstone/Coursera-SwiftKey/final/en_US"
 
 ## Modifing by taking out george carlin's 7 dirty words:
 
@@ -42,3 +43,35 @@ summary(nchar(News))
 
 # Removing unprintable characters: command line: tr -cd '/11/12/15/40-/176' <en_US.blogs.txt> en_US.blogs.filt.txt
 
+# Creating functions for reading and writing file
+
+readfunction <- function(type, path, add_name = "", action = "r", output = NULL){
+  read_file <- sprintf("%sen_US.%s.txt", path, type)
+  read_file2 <- sprintf("%sen_US.%s.txt", path, type, add_name)
+  if (action == "r"){
+    con <- file(read_file, "r")
+    feed_lines <- readLines(con, skipNul = T)
+    close(con)
+    return(list(feed = type, lines = feed_lines))
+  }
+  if (action == "w"){
+    con <- file(read_file2, "w")
+    feed_lines <- writeLines(text = output, con = con)
+    close(con)
+  }
+}
+
+en_US.blogs
+"%en_US.%.txt"
+
+# Create a sample
+
+linesSample <- lapply(sample_data, readfunction, path = pathname, action = "r")
+
+
+
+ls_sample <- lapply(feed_sample, feedStdIO, path = pathname, action = "r")
+# str(ls_sample)
+blog <- ls_sample[[1]][[2]]
+news <- ls_sample[[2]][[2]]
+twit <- ls_sample[[3]][[2]]

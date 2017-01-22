@@ -11,6 +11,9 @@ library('scales')
 library('rJava')
 library('wordcloud')
 
+packageurl <- "https://cran.r-project.org/src/contrib/slam_0.1-40.tar.gz"
+install.packages(packageurl, contriburl=NULL, type="source")
+
 ## Task 0: Understanding the Problem
 
 News <- readLines("en_US.news.txt", encoding = "UTF-8", skipNul=TRUE)
@@ -40,11 +43,15 @@ summary(nchar(News))
 # Data Cleaning includes: 1)Removing; numbers, punctuation, foreign characters, 
 # whitespaces, words not in the English language, profanity and 2) Converting to lowercase
 
-data.sample <- sample(Blogs, length(Blogs) * 0.005)
+x <- c("some text http://idontwantthis.com", 
+       "same problem again http://pleaseremoveme.com")
+
+data.sample <- sample(Blogs, length(Blogs) * 0.010)
 Corpus <- VCorpus(VectorSource(data.sample))
 ToSpace <- content_transformer(function(x, pattern) gsub(pattern, " ", x))
-Corpus <- tm_map(Corpus, ToSpace, "(f|ht)tp(s?://(.*)[.][a-z]+)")
-Corpus <- tm_map(Corpus, ToSpace, "@[^\\s]+")
+Corpus <- tm_map(Corpus, ToSpace, gsub("(f|ht)tp(s?)://(.*)[.][a-z]+", "", x))
+
+Corpus <- tm_map(Corpus, ToSpace,"@[^\\s]+")
 Corpus <- tm_map(Corpus, tolower)
 Corpus <- tm_map(Corpus, removeWords, stopwords("english"))
 Corpus <- tm_map(Corpus, removePunctuation)
@@ -52,7 +59,7 @@ Corpus <- tm_map(Corpus, removeNumbers)
 Corpus <- tm_map(Corpus, stripWhitespace)
 Corpus <- tm_map(Corpus, PlainTextDocument)
 
--
+
 # An N-Gram refers to the number of words in a string.
 # I focuse on a Tri-gram model. The basic building blocks of that model are Uni-grams, Bi-grams, and Tri-grams.
 
@@ -89,6 +96,7 @@ three.g.sort[1:30,]
 par(mfrow = c(1,2))
 wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 wordcloud(three.g.sort[,1], freq = three.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
+
 
 
 
