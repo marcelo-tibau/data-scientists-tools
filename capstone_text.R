@@ -1,21 +1,35 @@
-
+library('NLP')
+library('RWeka')
+library('tm')
+library('SnowballC')
+library('wordcloud')
 
 News <- readLines("en_US.news.txt", encoding = "UTF-8", skipNul=TRUE)
 Twitter <- readLines("en_US.twitter.txt", encoding = "UTF-8", skipNul = TRUE)
 Blogs <- readLines("en_US.blogs.txt", encoding = "UTF-8", skipNul = TRUE)
 
+## Task 0: Understanding the Problem
 
-set.seed(48)
-News.sample <- sample(News, length(News)*0.10, replace = FALSE)
+# Setting seed for reproducibility purposes and sampling the data sets
+
+set.seed(148)
 Twitter.sample <- sample(Twitter, length(Twitter)*0.10, replace = FALSE)
+
+News.sample <- sample(News, length(News)*0.10, replace = FALSE)
+
 Blogs.sample <- sample(Blogs, length(Blogs)*0.10, replace = FALSE)
 
 summary(nchar(News.sample))
 hist(News.sample)
 
+## Task 1: Getting and cleaning the data
 
-library(tm)
-library(SnowballC)
+# Creating a Subset Corpus, Cleaning Data and Reviewing Basic Data Summaries.
+# Data Cleaning includes: 1)Removing; numbers, punctuation, foreign characters, 
+# whitespaces, words not in the English language,  and 2) Converting to lowercase
+
+
+# new data set with samples of all three datas together
 new.data <- c(News.sample,Twitter.sample,Blogs.sample)
 corpus <- Corpus(VectorSource(new.data))
 remove.decimals <- function(x) {gsub("([0-9]*)\\.([0-9]+)", "\\1 \\2", x)}
@@ -30,7 +44,32 @@ corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, tolower)
 corpus <- tm_map(corpus, removeWords, stopwords("english"))
 
+# only twitter sample data to avoid out of memory bust while sequencing
+corpus.twitter <- Corpus(VectorSource(Twitter.sample))
+remove.decimals <- function(x) {gsub("([0-9]*)\\.([0-9]+)", "\\1 \\2", x)}
+remove.hashtags <- function(x) {gsub("#[a-zA-Z0-9]+", " ", x)}
+remove.noneng <- function(x) {gsub("\\W+", " ", x)}
+corpus.twitter <- tm_map(corpus.twitter, remove.decimals)
+corpus.twitter <- tm_map(corpus.twitter, removeNumbers)
+corpus.twitter <- tm_map(corpus.twitter, remove.noneng)
+corpus.twitter <- tm_map(corpus.twitter, remove.hashtags)
+corpus.twitter <- tm_map(corpus.twitter, stripWhitespace)
+corpus.twitter <- tm_map(corpus.twitter, removePunctuation)
+corpus.twitter <- tm_map(corpus.twitter, tolower)
+corpus.twitter <- tm_map(corpus.twitter, removeWords, stopwords("english"))
 
-two.gram.toke <- NGramTokenizer(corpus, Weka_control(min = 2, max = 2))
+
+
+## Task 2: Exploratory Data Analysis
+
+# Two-Gram Tokenization
+
+two.gram.toke <- NGramTokenizer(corpus.twitter, Weka_control(min = 2, max = 2))
 two.g <- data.frame(table(two.gram.toke))
 two.g.sort <- two.g[order(two.g$Freq, decreasing = TRUE),]
+
+
+wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
+
+
+

@@ -155,3 +155,8 @@ lineTwitter[biostatsTwitter]
 senteceTwitter <- grep("A computer once beat me at chess, but it was no match for me at kickboxing", lineTwitter)
 length(senteceTwitter)
 
+
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+tdm <- TermDocumentMatrix(crude, control = list(tokenize = BigramTokenizer))
+two.gram.twitter <- ngrams(corpus.twitter, 2L)
+two.g.twitter.Token <-  Token_Tokenizer(two.gram.twitter, Weka_control(min = 2, max = 2))
