@@ -12,6 +12,32 @@ Blogs <- readLines("en_US.blogs.txt", encoding = "UTF-8", skipNul = TRUE)
 
 ## Task 0: Understanding the Problem
 
+# Basic readings and analysis on Twitter data:
+twitterWords <- stringi::stri_count_words(Twitter)
+summary(twitterWords)
+range(twitterWords)
+
+twitterStats <- stringi::stri_stats_general(Twitter)
+twitterStats
+range(twitterStats)
+
+sampleReading_twitter <- Twitter[sample(1:length(Twitter), 30000)]
+twitterStatsSR <- stringi::stri_stats_general(sampleReading_twitter)
+twitterStatsSR
+
+# Basic readings and analysis on News data:
+newsWords <- stringi::stri_count_words(News)
+summary(newsWords)
+range(newsWords)
+
+newsStats <- stringi::stri_stats_general(News)
+newsStats
+range(newsStats)
+
+sampleReading_news <- News[sample(1:length(News), 30000)]
+newsStatsSR <- stringi::stri_stats_general(sampleReading_news)
+newsStatsSR
+
 # Setting seed for reproducibility purposes and sampling the data sets
 
 set.seed(148)
@@ -42,7 +68,6 @@ summary(Twitter)
 summary(nchar(Twitter))
 summary(News)
 summary(nchar(News))
-
 
 ## Task 1: Getting and cleaning the data
 
@@ -107,8 +132,10 @@ three.gram.toke <- NGramTokenizer(corpus.twitter, Weka_control(min = 3, max = 3)
 three.g <- data.frame(table(three.gram.toke))
 three.g.sort <- three.g[order(three.g$Freq, decreasing = TRUE),]
 
+three.g.sort[1:20,]
+
 # Creating a wordcloud
-
+par(mfrow = c(1,2))
 wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
-
+wordcloud(three.g.sort[,1], freq = three.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 
