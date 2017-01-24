@@ -80,6 +80,8 @@ corpus.twitter <- tm_map(corpus.twitter, removePunctuation)
 corpus.twitter <- tm_map(corpus.twitter, tolower)
 corpus.twitter <- tm_map(corpus.twitter, removeWords, stopwords("english"))
 
+corpus.twitter <- tm_map(corpus.twitter, removeWords, profanity)
+
 # Remove profanity and rude words. From the dataset FrontGateMedia (font: www.FrontGateMedia.com) which presents more than 700 such words.
 # These words will be used as stopwords. 
 
@@ -100,6 +102,12 @@ two.g.sort <- two.g[order(two.g$Freq, decreasing = TRUE),]
 
 two.g.sort[1:20,]
 
+# Three-Gram Tokenization
+three.gram.toke <- NGramTokenizer(corpus.twitter, Weka_control(min = 3, max = 3))
+three.g <- data.frame(table(three.gram.toke))
+three.g.sort <- three.g[order(three.g$Freq, decreasing = TRUE),]
+
+# Creating a wordcloud
 
 wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 
