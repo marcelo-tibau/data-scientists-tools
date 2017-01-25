@@ -38,6 +38,19 @@ sampleReading_news <- News[sample(1:length(News), 30000)]
 newsStatsSR <- stringi::stri_stats_general(sampleReading_news)
 newsStatsSR
 
+# Basic readings and analysis on Blogs data:
+blogsWords <- stringi::stri_count_words(Blogs)
+summary(blogsWords)
+range(blogsWords)
+
+blogsStats <- stringi::stri_stats_general(Blogs)
+blogsStats
+range(blogsStats)
+
+sampleReading_blogs <- Blogs[sample(1:length(Blogs), 30000)]
+blogsStatsSR <- stringi::stri_count_words(sampleReading_blogs)
+blogsStatsSR
+
 # Setting seed for reproducibility purposes and sampling the data sets
 
 set.seed(148)
@@ -119,6 +132,16 @@ corpus <- tm_map(corpus, removeWords, profanity)
 
 ## Task 2: Exploratory Data Analysis
 
+# One-Gram Tokenization
+
+one.gram.toke <- NGramTokenizer(corpus.twitter, Weka_control(min = 1, max = 1))
+one.g <- data.frame(table(one.gram.toke))
+one.g.sort <- one.g[order(one.g$Freq, decreasing = TRUE),]
+
+one.g.sort[1:20,]
+
+wordcloud(one.g.sort[,1], freq = one.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
+
 # Two-Gram Tokenization
 
 two.gram.toke <- NGramTokenizer(corpus.twitter, Weka_control(min = 2, max = 2))
@@ -139,3 +162,8 @@ par(mfrow = c(1,2))
 wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 wordcloud(three.g.sort[,1], freq = three.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 
+# To choose a value for n in an n-gram model, it is necessary
+# to find the right trade off between the stability of
+# the estimate against its appropriateness. This means that
+# three-gram is a common choice with large training corpora (millions of words), 
+# whereas a two-gram is often used with smaller ones, such as the ones we are working with.
