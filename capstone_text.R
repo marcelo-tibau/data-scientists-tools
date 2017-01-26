@@ -130,7 +130,7 @@ profanity <- rep(profanity$Your.Gateway.to.the.Chrisitan.Audience)
 corpus <- tm_map(corpus, removeWords, profanity)
 
 
-## Task 2: Exploratory Data Analysis
+## Task 2: Exploratory Data Analysis & Task 3: Modeling
 
 # One-Gram Tokenization
 
@@ -162,8 +162,43 @@ par(mfrow = c(1,2))
 wordcloud(two.g.sort[,1], freq = two.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 wordcloud(three.g.sort[,1], freq = three.g.sort[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 
-# To choose a value for n in an n-gram model, it is necessary
-# to find the right trade off between the stability of
+# To choose a value for n in an n-gram model, it is necessary to find the right trade off between the stability of
 # the estimate against its appropriateness. This means that
 # three-gram is a common choice with large training corpora (millions of words), 
 # whereas a two-gram is often used with smaller ones, such as the ones we are working with.
+
+
+## Task 4: Prediction Model
+
+# Partition the Data into Train and Test Dataset.
+library('caret')
+
+inTrain <- createDataPartition(y=corpus.twitter$classe, p=0.7, list=FALSE)
+training <- corpus.twitter[inTrain,]
+testing <- corpus.twitter[-inTrain,]
+
+# Conditional Inference Trees
+# Uses an implementation of conditional inference trees which embed tree-structured regression models into a well defined theory of conditional inference procedures.
+library('party')
+
+# To train the data set;
+train.ctree <- ctree(Author~., data = training, controls = ctree_control(maxsurrogate = 2))
+plot(train.ctree)
+
+# Prediction applied on testing and training data set using the trained model:
+testing.pred.ctree <- predict(train.ctree, testing)
+training.pred.ctree <- predict(train.ctree, training)
+
+# Misclassification Matrix
+# Test Data Prediction:
+misClassTest <- table("Predict"=testing.pred.ctree, "Actual"=testing$Author)
+
+# Train Data Prediction:
+missClassTrain <- table("Predict"=training.pred.ctree, "Actual"=training$Author)
+
+# Accuracy based on Acceptance criteria
+Accuracy.ctree <- (100-mean(c((nrow(testing)-sum(diag(misClassTest)))/nrow(testing)),(nrow(training)-sum(diag(missClassTrain)))/nrow(training)))
+Accuracy.ctree
+
+
+
