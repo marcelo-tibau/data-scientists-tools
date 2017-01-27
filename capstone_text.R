@@ -5,6 +5,7 @@ library('SnowballC')
 library('wordcloud')
 library('stringi')
 library('stringr')
+library('filehash')
 
 News <- readLines("en_US.news.txt", encoding = "UTF-8", skipNul=TRUE)
 Twitter <- readLines("en_US.twitter.txt", encoding = "UTF-8", skipNul = TRUE)
@@ -170,12 +171,24 @@ wordcloud(three.g.sort[,1], freq = three.g.sort[,2], scale = c(5,1), random.orde
 
 ## Task 4: Prediction Model
 
+# To generate a Document Term Matrix
+# Matrix form
+ctwitter.matrix <- TermDocumentMatrix(corpus.twitter)
+
+ctwitter.matrix <- as.matrix(gsub("corpus", corpus.twitter))
+ctwitter.dataframe <- as.data.frame(ctwitter.matrix)
+
+AVTM_matrix<-as.matrix(AVTM_Rem)
+
+Final_AVTM<-cbind(Final_DTM,AVTM_matrix)  ## Matrix form
+Final_AVTM_Df<-as.data.frame(Final_AVTM)   ##DataFrame form
+
 # Partition the Data into Train and Test Dataset.
 library('caret')
 
-inTrain <- createDataPartition(y=corpus.twitter$classe, p=0.7, list=FALSE)
-training <- corpus.twitter[inTrain,]
-testing <- corpus.twitter[-inTrain,]
+inTrain <- createDataPartition(y=Twitter.sample, p=0.7, list=FALSE)
+training <- two.g.sort[inTrain,]
+testing <- two.g.sort[-inTrain,]
 
 # Conditional Inference Trees
 # Uses an implementation of conditional inference trees which embed tree-structured regression models into a well defined theory of conditional inference procedures.
