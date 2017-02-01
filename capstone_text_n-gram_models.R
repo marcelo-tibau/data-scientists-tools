@@ -57,6 +57,95 @@ write(newsTrain, "newsTrain.txt")
 write(newsDevTest, "newsDevtest.txt")
 write(newsTest, "newsTest.txt")
 
+## Data cleaning:
+
+# Set the dataset to remove profanity and rude words. From the dataset FrontGateMedia (font: www.FrontGateMedia.com) which presents more than 700 such words.
+# These words will be used as stopwords later on. 
+
+profanity <- read.csv("Terms-to-Block.csv")
+profanity <- profanity[-c(1:3),]
+profanity <- rep(profanity$Your.Gateway.to.the.Chrisitan.Audience)
+
+# Directing the source to the "trainings" dataset. In order to do that, I added a folder "training" 
+# and included the Train.txt (blogs, news, twitter) files in it.
+# I also and created the folder "modified" to hold in-process cleaning data.
+
+Corpus <- PCorpus(DirSource("training", encoding = "UTF-8", mode = "text"),
+                  dbControl = list(dbName="Corpus.db", dbType="DB1"))
+
+
+# Cleaning steps:
+# to convert to lower case, separate hyphenated and slashed words, convert symbol to apostrophe, 
+# provide progress to user and create end of sentence markers:
+
+Corpus <- tm_map(Corpus, content_transformer(tolower)); dbInit("Corpus.db")
+
+for(j in seq(Corpus)) {
+  Corpus[[j]][[1]] <- gsub("-", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("/", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("<>", "\\'", Corpus[[j]][[1]])
+  print("3 of 18 transformations complete")
+  Corpus[[j]][[1]] <- gsub("\\. |\\.$","  <EOS> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\? |\\?$","  <EOS> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\! |\\!$","  <EOS> ", Corpus[[j]][[1]])
+  print("6 of 18 transformations complete") 
+}
+
+# To write corpus to permanent disc
+
+write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
+
+# Reads back, tranforms various ASCII codes to appropriate language, removes all punctuation except apostrophe and <> symbols in <EOS>
+# removes web site URLs, removes all single letters except "a" and "i":
+Corpus <- PCorpus(DirSource("modified", encoding = "UTF-8", mode = "text"),
+                  dbControl = list(dbName="halfCorpus.db", dbType="DB1"))
+
+for(j in seq(Corpus)) {
+  Corpus[[j]][[1]] <- gsub("<85>"," <EOS> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("<92>","'", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\&", " and ", Corpus[[j]][[1]])
+  print("9 of 18 transformations complete")
+  Corpus[[j]][[1]] <- gsub("[^[:alnum:][:space:]\'<>]", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub(" www(.+) ", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub(" [b-hj-z] "," ", Corpus[[j]][[1]])
+  print("12 of 18 transformations complete")
+  }
+
+write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
+
+# Remove apostrophes introduced by transformations, errant codes in < > brackets, eplaces numbers with a number marker <NUM> for context
+# and the errant <> brackets remaining:
+
+Corpus <- PCorpus(DirSource("modified", encoding="UTF-8", mode = "text"), dbControl = list(dbName="lastCorpus.db", dbType="DB1"))
+
+for(j in seq(Corpus)) {
+  Corpus[[j]][[1]] <- gsub(" ' "," ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\' ", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub(" ' ", " ", Corpus[[j]][[1]])
+  print("15 of 18 transformations complete")
+  Corpus[[j]][[1]] <- gsub("<[^EOS].+>"," ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("[0-9]+"," <NUM> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("<>"," ", Corpus[[j]][[1]])
+  print("18 of 18 transformations complete") 
+}
+
+
+# Codes to remove numbers and the "dbInit" function from filehash package to compresses data in RAM.
+Corpus <- tm_map(Corpus, removeNumbers); dbInit("lastCorpus.db")
+
+# Codes to remove errant 's symbols not as contractions, close brackets starting a word and white spaces such as line breaks>
+Corpus[[1]][[1]] <- gsub(" 's"," ", Corpus[[1]][[1]])
+Corpus[[1]][[1]] <- gsub(">[a-z]"," ", Corpus[[1]][[1]])
+
+Corpus <- tm_map(Corpus, stripWhitespace); dbInit("lastCorpus.db") 
+
+
+# Code to Write final, processed corpus to disc for building n-grams
+write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
+
+
+
+
 #### restart from executive Summary: https://github.com/jgendron/datasciencecoursera/blob/master/NLP-A%20Model%20to%20Predict%20Word%20Sequences.Rmd
 
 profanity <- read.csv("Terms-to-Block.csv")
