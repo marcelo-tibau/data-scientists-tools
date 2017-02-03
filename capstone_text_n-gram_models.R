@@ -1,5 +1,6 @@
 library('tm')   
 library('filehash')
+library('tau')
 
 # Using virtual corpus to read the three data sets (I created 3 folders and associated one corpus per folder:
 
@@ -143,8 +144,104 @@ Corpus <- tm_map(Corpus, stripWhitespace); dbInit("lastCorpus.db")
 # Code to Write final, processed corpus to disc for building n-grams
 write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
 
+## One-Gram Model
+# Codes uses CorpusTrain.txt to generate list of all 1-gram (unigrams). The library tau is also used.
+
+Corpus <- PCorpus(DirSource("modified", encoding="UTF-8", mode = "text"), dbControl = list(dbName="aggCorpus.db", dbType="DB1"))
+
+# Define a source to pulls out the text element from the list Corpus:
+CORP <- c(Corpus[[1]][[1]])
+
+# Creation of a ngram function
+n.gram <- function(n) {
+  textcnt(CORP, method = "string", n = as.integer(n),
+          split = "[[:space:][:digit:]]+", decreasing = T)
+}
 
 
+# Codes to build the one-gram model
+one.gram <- n.gram(1)
+one.gram.DF <- data.frame(Uni = names(one.gram), counts = unclass(one.gram))
+
+one.gram.DF$Uni <- as.character(one.gram.DF$Uni)
+one.gram.DF$counts <- as.numeric(one.gram.DF$counts)
+
+# Codes to remove the "words" <eos> and <num> from one.gram data frame
+
+one.gram.DF <- one.gram.DF[which(one.gram.DF$Uni !="<eos>"),]
+one.gram.DF <- one.gram.DF[which(one.gram.DF$Uni !="<num>"),]
+
+# Some exploratory analysis:
+length(one.gram.DF$Uni)
+
+wordcloud(one.gram.DF[,1], freq = one.gram.DF[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
+
+# Code to build a frequency table for Good-Turing smoothing:
+one.freq.t <- data.frame(Uni=table(one.gram.DF$counts))
+
+# write to csv files to speedy the process later:
+write.csv(one.gram.DF, "one.gram.DF.csv")
+write.csv(one.freq.t, "one.freq.t.csv")
+
+## Two-Gram Model
+# Codes to build the two-gram model. Here we reset the Corpus in order to define a new database to two.gram:
+
+Corpus <- PCorpus(DirSource("modified", encoding="UTF-8", mode = "text"), dbControl = list(dbName="twogramCorpus.db", dbType="DB1"))
+
+CORP <- c(Corpus[[1]][[1]])
+
+# Codes to set the number of loop runs to process 10,000 docs per run:
+step <- trunc(length(CORP)/10000)
+remain <- length(CORP)-(step * 10000)
+CORPport <- CORP[1:remain]
+
+# The two-gram model
+two.gram <- n.gram(2)
+names(two.gram) <- gsub("^\'","", names(two.gram))
+two.gram.df <- data.frame(Bi = names(two.gram), counts = unclass(two.gram))
+names(two.gram.df) <- c("Bi", "counts")
+
+# Codes to remove the "words" <eos> and <num> from the two-gram database:
+eost <- grepl("<eos>", two.gram.df$Bi)
+two.gram.df <- two.gram.df[!eost,]
+numt <- grepl("<num>", two.gram.df$Bi)
+two.gram.df <- two.gram.df[!numt,]
+
+# Code to write the N:n=step dataframe
+write.csv(two.gram.df, "two.gram.def.csv")
+
+# Codes to remove the processed docs from corpus, provide user progress, remove the "words" <eos> and <num> from the table and create a loop to process the 10000 docs.
+CORP <- CORP[-(1:remain)]
+
+for (i in 1:(step-1)) {
+  CORPport <- CORP[1:10000]
+  two.gram <- n.gram(2)
+  names(two.gram) <- gsub("^\'","", names(two.gram))
+  temp.two.gram.df <- data.frame(Bi = names(two.gram), counts = unclass(two.gram))
+  print(paste("Iteration", i, "of", step))
+  name <- paste("two.gram.df", (i+1), ".csv", sep = "")
+  eost <- grepl("<eos>", temp.two.gram.df$Bi)
+  temp.two.gram.df <- temp.two.gram.df[!eost, ]
+  numt <- grepl("<num>", temp.two.gram.df$Bi)
+  temp.two.gram.df <- temp.two.gram.df[!numt,]
+  write.csv(temp.two.gram.df, name)
+  two.gram.df <- rbind(two.gram.df, temp.two.gram.df)
+  two.gram.df <- aggregate(two.gram.df$counts, list(Bi=two.gram.df$Bi), sum)
+  names(two.gram.df) <- c("Bi", "counts")
+  CORP <- CORP[-(1:10000)]
+}
+
+
+  
+ 
+twogramDF$Bi<-as.character(twogramDF$Bi)
+twogramDF$counts<-as.numeric(twogramDF$counts)
+twogramDF$Uni<-sub(" .*","",twogramDF$Bi)
+# Builds frequency of frequency table for Good-Turing smoothing
+bi.freqfreq<-data.frame(Bi=table(twogramDF$counts))
+write.csv(twogramDF,"twogramDF.csv")
+write.csv(bi.freqfreq,"bi-freqfreq.csv")
+rm(bi.freqfreq,twogramDF)
 
 #### restart from executive Summary: https://github.com/jgendron/datasciencecoursera/blob/master/NLP-A%20Model%20to%20Predict%20Word%20Sequences.Rmd
 
