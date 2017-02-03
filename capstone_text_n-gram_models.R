@@ -231,17 +231,19 @@ for (i in 1:(step-1)) {
   CORP <- CORP[-(1:10000)]
 }
 
+two.gram.df$Bi <- as.character(two.gram.df$Bi)
+two.gram.df$counts <- as.numeric(two.gram.df$counts)  
+two.gram.df$Uni <- sub(" .*","", two.gram.df$Bi)
 
-  
- 
-twogramDF$Bi<-as.character(twogramDF$Bi)
-twogramDF$counts<-as.numeric(twogramDF$counts)
-twogramDF$Uni<-sub(" .*","",twogramDF$Bi)
-# Builds frequency of frequency table for Good-Turing smoothing
-bi.freqfreq<-data.frame(Bi=table(twogramDF$counts))
-write.csv(twogramDF,"twogramDF.csv")
-write.csv(bi.freqfreq,"bi-freqfreq.csv")
-rm(bi.freqfreq,twogramDF)
+# Codes to build frequency table for Good-Turing smoothing:
+
+two.freq.t <- data.frame(Bi=table(two.gram.df$counts))
+write.csv(two.gram.df, "two.gram.df.csv")
+write.csv(two.freq.t, "two.freq.t.csv")
+
+
+
+
 
 #### restart from executive Summary: https://github.com/jgendron/datasciencecoursera/blob/master/NLP-A%20Model%20to%20Predict%20Word%20Sequences.Rmd
 
