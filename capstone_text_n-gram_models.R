@@ -260,7 +260,7 @@ for (i in 1:(step)) {
   names(three.gram) <- gsub("^\'","", names(three.gram))
   three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))
   print(paste("Iteration", i, sep = " "))
-  name(paste("three.gram.df", i, ".csv", sep = ""))
+  names(paste("three.gram.df", i, ".csv", sep = ""))
   eost <- grepl("<eos>", three.gram.df$Tri)
   three.gram.df <- three.gram.df[!eost,]
   numt <- grepl("<num>", three.gram.df$Tri)
@@ -276,7 +276,7 @@ three.gram <- n.gram(3)
 names(three.gram) <- gsub("^\'","", names(three.gram))
 three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))
 names(three.gram.df) <- c("Tri", "counts")
-name <- paste("three.gram.df", i+1, ".csv", sep = "")
+names <- paste("three.gram.df", i+1, ".csv", sep = "")
 eost <- grepl("<eos>", three.gram.df$Tri)
 three.gram.df <- three.gram.df[!eost,]
 numt <- grepl("<num>", three.gram.df$Tri)
