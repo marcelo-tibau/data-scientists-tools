@@ -242,6 +242,47 @@ write.csv(two.gram.df, "two.gram.df.csv")
 write.csv(two.freq.t, "two.freq.t.csv")
 
 
+## Three-gram
+# Codes to build the three-gram model. The deal here is to break large corpus into chunks to deal
+# with limitations imposed by RAM in R
+
+Corpus <- PCorpus(DirSource("modified", encoding = "UTF-8", mode = "text"), dbControl = list(dbName="threegramCorpus.db", dbType="DB1"))
+
+CORP <- c(Corpus[[1]][[1]])
+
+# Codes to determine the number of loop runs to process to 10,000 docs per run and write the first of N:n=step dataframes:
+
+step <- trunc(length(CORP)/10000)
+
+for (i in 1:(step)) {
+  CORPport <- CORP[1:10000]
+  three.gram <- n.gram(3)
+  names(three.gram) <- gsub("^\'","", names(three.gram))
+  three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))
+  print(paste("Iteration", i, sep = " "))
+  name(paste("three.gram.df", i, ".csv", sep = ""))
+  eost <- grepl("<eos>", three.gram.df$Tri)
+  three.gram.df <- three.gram.df[!eost,]
+  numt <- grepl("<num>", three.gram.df$Tri)
+  three.gram.df <- three.gram.df[!numt]
+  write.csv(three.gram.df, name)
+  CORP <- CORP[-(1:10000)]
+}
+
+CORPport <- CORP
+
+# To repeat above loop for the remaining documents (partial step)
+three.gram <- n.gram(3)
+names(three.gram) <- gsub("^\'","", names(three.gram))
+three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))
+names(three.gram.df) <- c("Tri", "counts")
+name <- paste("three.gram.df", i+1, ".csv", sep = "")
+eost <- grepl("<eos>", three.gram.df$Tri)
+three.gram.df <- three.gram.df[!eost,]
+numt <- grepl("<num>", three.gram.df$Tri)
+three.gram.df <- three.gram.df[!numt, ]
+write.csv (three.gram.df,name)
+
 
 
 
