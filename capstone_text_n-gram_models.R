@@ -264,7 +264,7 @@ for (i in 1:(step)) {
   eost <- grepl("<eos>", three.gram.df$Tri)
   three.gram.df <- three.gram.df[!eost,]
   numt <- grepl("<num>", three.gram.df$Tri)
-  three.gram.df <- three.gram.df[!numt]
+  three.gram.df <- three.gram.df[!numt,]
   write.csv(three.gram.df, name)
   CORP <- CORP[-(1:10000)]
 }
