@@ -1,6 +1,7 @@
 library('tm')   
 library('filehash')
 library('tau')
+library('wordcloud')
 
 # Using virtual corpus to read the three data sets (I created 3 folders and associated one corpus per folder:
 
@@ -284,6 +285,7 @@ three.gram.df <- three.gram.df[!numt, ]
 write.csv (three.gram.df,name)
 
 # Codes to aggregate dataframes in groups to develop one three-gram dataframe:
+# First round aggregation
 
 for (k in seq(1, 46, 5)) {
   key <- paste("three.gram.df", k, ".csv", sep = "")
@@ -297,7 +299,7 @@ for (k in seq(1, 46, 5)) {
     print(k+m)
     rm(temp)
   }
-  out <- paste("mergedTri", k, ".csv", sep = "")
+  out <- paste("merged.three.g", k, ".csv", sep = "")
   counts <- three.gram.df[, 2:ncol(three.gram.df)]
   three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
   three.gram.df <- three.gram.df[, -(2:(ncol(three.gram.df)-1))]
@@ -320,14 +322,62 @@ for (m in 1:3) {
   rm(temp)
 }
 
-out <- paste("mergedTri", k, ".csv", sep = "")
+out <- paste("merged.three.g", k, ".csv", sep = "")
 counts <- three.gram.df[,2:ncol(three.gram.df)]
 three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
 three.gram.df <- three.gram.df[,-(2:(ncol(three.gram.df)-1))]
 write.csv(three.gram.df, out)
 rm(three.gram.df, counts)
 
+# Second round aggregation
 
+for(p in c(1, 11, 21, 31, 41)) {
+  m1 <- paste("merged.three.g", p, ".csv", sep = "")
+  m6 <- paste("merged.three.g", (p+5), ".csv", sep = "")
+  print(m1)
+  print(m6)
+  m1 <- read.csv(m1)[,-1]
+  m6 <- read.csv(m6)[,-1]
+  super <- merge(m1, m6, by.x="Tri", by.y="Tri", all=TRUE)
+  rm(m1,m6)
+  counts <- super[,2:ncol(super)]
+  super$counts <- rowSums(counts, na.rm = TRUE)
+  super <- super[, -(2:(ncol(super)-1))]
+  sup.out <- paste("super.three.g", p, ".csv", sep = "")
+  write.csv(super, sup.out)
+  rm(super, counts)
+}
+
+super.three.51 <- read.csv("merged.three.g51.csv")[,-1]
+write.csv(super.three.51, "super.three.51.csv")
+rm(super.three.51)
+
+# Third round aggregation       
+
+for(p in c(1, 21, 41)) {
+  m1 <- paste("super.three.51", p, ".csv", sep = "")
+  m6 <- paste("super.three.51", (p+10), ".csv", sep = "")
+  print(m1)
+  print(m6)
+  m1 <- read.csv(m1)[,-1]
+  m6 <- read.csv(m6)[,-1]
+  super <- merge(m1, m6, by.x="Tri", by.y="Tri", all=TRUE)
+  rm(m1, m6)
+  counts <- super[, 2:ncol(super)]
+  super$counts <- rowSums(counts, na.rm = TRUE)
+  super <- super[, -(2:(ncol(super)-1))]
+  sup.out <- paste("super.three.2-", p, ".csv", sep = "")
+  write.csv(super, sup.out)
+  rm(super, counts)
+}
+
+
+
+
+
+#####
+## First of final 2 aggregating processes to develop one trigram dataframe
+##### 
 
 
 #### restart from executive Summary: https://github.com/jgendron/datasciencecoursera/blob/master/NLP-A%20Model%20to%20Predict%20Word%20Sequences.Rmd
