@@ -283,6 +283,50 @@ numt <- grepl("<num>", three.gram.df$Tri)
 three.gram.df <- three.gram.df[!numt, ]
 write.csv (three.gram.df,name)
 
+# Codes to aggregate dataframes in groups to develop one three-gram dataframe:
+
+for (k in seq(1, 46, 5)) {
+  key <- paste("three.gram.df", k, ".csv", sep = "")
+  print(k)
+  three.gram.df <- read.csv(file = key)
+  three.gram.df <- three.gram.df[,-1]
+  for (m in 1:4) {
+    name <- paste("three.gram.df", (k+m), ".csv", sep = "")
+    temp <- temp[, -1]
+    three.gram.df <- merge(three.gram.df, temp, by.x = "Tri", by.y = "Tri", all = TRUE)
+    print(k+m)
+    rm(temp)
+  }
+  out <- paste("mergedTri", k, ".csv", sep = "")
+  counts <- three.gram.df[, 2:ncol(three.gram.df)]
+  three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
+  three.gram.df <- three.gram.df[, -(2:(ncol(three.gram.df)-1))]
+  write.csv(three.gram.df, out)
+  rm(three.gram.df, out)
+}
+
+k = k+5
+
+key <- paste("three.gram.df", k, ".csv", sep = "")
+print(k)
+three.gram.df <- read.csv(file = key)
+three.gram.df <- three.gram.df[, -1]
+for (m in 1:3) {
+  name <- paste("three.gram.df", (k+m), ".csv", sep = "")
+  temp <- read.csv(name)
+  temp <- temp[, -1]
+  three.gram.df <- merge(three.gram.df, temp, by.x = "Tri", by.y = "Tri", all = TRUE)
+  print(k+m)
+  rm(temp)
+}
+
+out <- paste("mergedTri", k, ".csv", sep = "")
+counts <- three.gram.df[,2:ncol(three.gram.df)]
+three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
+three.gram.df <- three.gram.df[,-(2:(ncol(three.gram.df)-1))]
+write.csv(three.gram.df, out)
+rm(three.gram.df, counts)
+
 
 
 
