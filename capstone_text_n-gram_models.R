@@ -376,12 +376,12 @@ for(p in c(1, 21, 41)) {
 
 Al <- read.csv("super.three.2-1.csv")[,-1]
 Al2plus <- Al[which(Al$counts>=2),]
-Alsingles <- Al[which(Al$counts=1),]
+Alsingles <- Al[which(Al$counts==1),]
 rm(Al)
 
 Be <- read.csv("super.three.2-21.csv")[,-1]
 Be2plus <- Be[which(Be$counts>=2),]
-Besingles <- Be[which(Be$counts=1),]
+Besingles <- Be[which(Be$counts==1),]
 rm(Be)
 
 # Codes to create aggregated dataframes 
@@ -417,114 +417,119 @@ singlesSecondHalf <- singles[-(1:half),]
 write.csv(singlesSecondHalf, "secondHalf.csv")
 rm(singles)
 
+# Phase 2
 
+Ga <- read.csv("super.three.2-41.csv")[,-1]  
+Ga2plus <- Ga[which(Ga$counts>=2),]
+Gasingles <- Ga[which(Ga$counts==1),] 
+rm(Ga)
 
- 
+three.gram.df <- read.csv("three.gram.df.csv")
+three.gram.df <- three.gram.df[,-1]
+three.gram.df <- merge(three.gram.df, Ga2plus, by.x="Tri", by.y="Tri", all=TRUE)
+rm(Ga2plus)
 
-
-
-
-
-
-
-#####
-## Second of final 2 aggregating processes to develop one trigram dataframe
-#####
-
-C<-read.csv("superTri2-41.csv")[,-1]
-CtwoPlus<-C[which(C$counts>=2),]
-Csingles<-C[which(C$counts==1),]
-rm(C)
-
-threegramDF<-read.csv("threegramDF.csv")
-threegramDF<-threegramDF[,-1]
-threegramDF <- merge(threegramDF,CtwoPlus, by.x="Tri",by.y="Tri", all=TRUE)
-rm(CtwoPlus)
-counts<-threegramDF[,2:ncol(threegramDF)]
-threegramDF$counts<-rowSums(counts,na.rm=TRUE)
-threegramDF<-threegramDF[,-(2:(ncol(threegramDF)-1))]
+counts <- three.gram.df[,2:ncol(three.gram.df)]
+three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
+three.gram.df <- three.gram.df[, -(2:(ncol(three.gram.df)-1))]
 rm(counts)
-write.csv(threegramDF,"threegramDF.csv")
-rm(threegramDF)
+write.csv(three.gram.df, "three.gram.df.csv")
+rm(three.gram.df)
 
-singles <-merge(singlesSecondHalf,Csingles, by.x="Tri",by.y="Tri", all=TRUE)
+singles <- merge(singlesSecondHalf, Gasingles, by.x="Tri", by.y="Tri", all=TRUE)
 rm(singlesSecondHalf)
 
-counts<-singles[,2:ncol(singles)]
-singles$counts<-rowSums(counts,na.rm=TRUE)
-singles<-singles[,-(2:(ncol(singles)-1))]
+counts <- singles[, 2:ncol(singles)]
+singles$counts <- rowSums(counts, na.rm = TRUE)
+singles <- singles[, -(2:(ncol(singles)-1))]
 rm(counts)
-singleBlend<-which(singles$counts>1)
-singlesAdd2Tri<-singles[singleBlend,]
-write.csv(singlesAdd2Tri,"add2Tri2.csv")
-rm(singlesAdd2Tri)
-singles<-singles[-singleBlend,]
-write.csv(singles,"halfRealsingles2.csv")
-rm(singleBlend,singles)
 
-firstHalf<-read.csv("firstHalf.csv")
-firstHalf<-firstHalf[,-1]
-singles <-merge(firstHalf,Csingles, by.x="Tri",by.y="Tri", all=TRUE)
-rm(Csingles,firstHalf)
+singleBlend <- which(singles$counts>1)
+singleAdd3 <- singles[singleBlend,]
+write.csv(singleAdd3, "add2three2.csv")
+rm(singleBlend, singles)
 
-counts<-singles[,2:ncol(singles)]
-singles$counts<-rowSums(counts,na.rm=TRUE)
-singles<-singles[,-(2:(ncol(singles)-1))]
+singles <- singles[-singleBlend,]
+write.csv(singles, "half.real.singles2.csv")
+rm(singleBlend, singles)
+
+firstHalf <- read.csv("firstHalf.csv")
+firstHalf <- firstHalf[,-1]
+singles <- merge(firstHalf, Gasingles, by.x="Tri", by.y="Tri", all=TRUE)
+rm(Gasingles, firstHalf)
+
+counts <- singles[,2:ncol(singles)]
+singles$counts <- rowSums(counts, na.rm = TRUE)
+singles <- singles[,-(2:(ncol(singles)-1))]
 rm(counts)
-singleBlend<-which(singles$counts>1)
-singlesAdd2Tri<-singles[singleBlend,]
-write.csv(singlesAdd2Tri,"add2Tri3.csv")
-rm(singlesAdd2Tri)
-singles<-singles[-singleBlend,]
+
+singleBlend <- which(singles$counts>1)
+singleAdd3 <- singles[singleBlend,]
+write.csv(singleAdd3, "add2three3.csv")
+rm(singleAdd3)
+
+singles <- singles[-singleBlend,]
 rm(singleBlend)
-write.csv(singles,"halfRealSingles1.csv")
+write.csv(singles, "half.real.singles1.csv")
 rm(singles)
 
-####
-## Bind all work together
-####
+# Codes to bind it all together
 
-threegramDF<-read.csv("threegramDF.csv")
-threegramDF<-threegramDF[,-1]
-one<-read.csv("add2Tri1.csv")
-one<-one[-1]
-threegramDF<-rbind(threegramDF,one)
+three.gram.df <- read.csv("three.gram.df.csv")
+three.gram.df <- three.gram.df[,-1]
+
+one <- read.csv("add2three1.csv")
+one <- one[-1]
+three.gram.df <- rbind(three.gram.df, one)
 rm(one)
-two<-read.csv("add2Tri2.csv")
-two<-two[-1]
-threegramDF<-rbind(threegramDF,two)
+
+two <- read.csv("add2three2.csv")
+two <- two[-1]
+three.gram.df <- rbind(three.gram.df, two)
 rm(two)
-three<-read.csv("add2Tri3.csv")
-three<-three[-1]
-threegramDF<-rbind(threegramDF,three)
+
+three <- read.csv("add2three3.csv")
+three <- three[-1]
+three.gram.df <- rbind(three.gram.df, three)
 rm(three)
-### Resultant trigram dataframe
-write.csv(threegramDF,"threegramDF.csv")
 
-threegramDF$Tri<-as.character(threegramDF$Tri)
-threegramDF$counts<-as.numeric(threegramDF$counts)
-bigram<-sub(" ","@@@@",threegramDF$Tri)
-bigram<-sub(" .*","",bigram)
-threegramDF$Bi<-sub("@@@@"," ",bigram)
-rm(bigram)
-threegramDF$Uni<-sub(".* ","",threegramDF$Bi)
-threegramDF$w3<-sub(".* ","",threegramDF$Tri) # provides the suggested word
-# Builds frequency of frequency table for Good-Turing smoothing
-tri.freqfreq <- data.frame(Tri=table(threegramDF$counts))
-write.csv(threegramDF[,-1],"threegramDF.csv")
-write.csv(tri.freqfreq,"tri-freqfreq.csv")
-rm(tri.freqfreq,threegramDF) 
+write.csv(three.gram.df, "three.gram.df.csv")
 
-####
-## create dataframe of singleton trigrams
-####
-S1<-read.csv("halfRealSingles1.csv")
-S1<-S1[,-1]
-S2<-read.csv("halfRealSingles2.csv")
-S2<-S2[,-1]
-S1<-rbind(S1,S2)
-write.csv(S1,"singleTriGrams.csv")
-rm(S1,S2)
+# Codes to prepare the dataset
+three.gram.df$Tri <- as.character(three.gram.df$Tri)
+three.gram.df$counts <- as.numeric(three.gram.df$counts)
+two.gram <- sub(" ","@@@@",three.gram.df$Tri)
+two.gram <- sub(" .*","", two.gram)
+three.gram.df$Bi <- sub("@@@@"," ", two.gram)
+rm(two.gram)
+
+three.gram.df$Uni <- sub(".* ","", three.gram.df$Bi)
+three.gram.df$w3 <- sub(".* ","", three.gram.df$Tri)
+
+# Codes to build frequency table for Good-Turing smoothing
+
+three.freq.t <- data.frame(Tri=table(three.gram.df$counts))
+write.csv(three.gram.df[,-1], "three.gram.df.csv")
+write.csv(three.freq.t, "three.freq.t.csv")
+rm(three.freq.t, three.gram.df)
+
+# Codes to create dataframe of singleton three-grams 
+
+single1 <- read.csv("half.real.singles1.csv")
+single1 <- single1[,-1]
+
+single2 <- read.csv("half.real.singles2.csv")
+single2 <- single2[,-1]
+
+single1 <- rbind(single1, single2)
+write.csv(single1, "single.three.gram.csv")
+rm(single1, single2)
+
+
+
+
+
+
 
 
 #### restart from executive Summary: https://github.com/jgendron/datasciencecoursera/blob/master/NLP-A%20Model%20to%20Predict%20Word%20Sequences.Rmd
