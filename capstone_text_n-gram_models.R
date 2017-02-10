@@ -2,6 +2,7 @@ library('tm')
 library('filehash')
 library('tau')
 library('wordcloud')
+library('scales')
 
 # Using virtual corpus to read the three data sets (I created 3 folders and associated one corpus per folder:
 
@@ -111,7 +112,7 @@ for(j in seq(Corpus)) {
   Corpus[[j]][[1]] <- gsub(" www(.+) ", " ", Corpus[[j]][[1]])
   Corpus[[j]][[1]] <- gsub(" [b-hj-z] "," ", Corpus[[j]][[1]])
   print("12 of 18 transformations complete")
-  }
+}
 
 write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
 
@@ -177,7 +178,7 @@ length(one.gram.DF$Uni)
 
 wordcloud(one.gram.DF[,1], freq = one.gram.DF[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 
-# Code to build a frequency table for Good-Turing smoothing:
+# Code to build frequency of frequency table for Good-Turing smoothing:
 one.freq.t <- data.frame(Uni=table(one.gram.DF$counts))
 
 # write to csv files to speedy the process later:
@@ -236,7 +237,7 @@ two.gram.df$Bi <- as.character(two.gram.df$Bi)
 two.gram.df$counts <- as.numeric(two.gram.df$counts)  
 two.gram.df$Uni <- sub(" .*","", two.gram.df$Bi)
 
-# Codes to build frequency table for Good-Turing smoothing:
+# Codes to build frequency of frequency table for Good-Turing smoothing:
 
 two.freq.t <- data.frame(Bi=table(two.gram.df$counts))
 write.csv(two.gram.df, "two.gram.df.csv")
@@ -402,7 +403,7 @@ rm(counts)
 singleBlend <- whics(singles$counts>1)
 singleAdd3 <- singles[singleBlend,]
 write.csv(singleAdd3, "add2three1.cvs")
-rm(singleAdd3)singleBlend
+rm(singleAdd3,singleBlend)
 singles <- singles[-singblend, ]
 rm(singleBlend)
 
@@ -506,7 +507,7 @@ rm(two.gram)
 three.gram.df$Uni <- sub(".* ","", three.gram.df$Bi)
 three.gram.df$w3 <- sub(".* ","", three.gram.df$Tri)
 
-# Codes to build frequency table for Good-Turing smoothing
+# Codes to build frequency of frequency table for Good-Turing smoothing
 
 three.freq.t <- data.frame(Tri=table(three.gram.df$counts))
 write.csv(three.gram.df[,-1], "three.gram.df.csv")
@@ -525,77 +526,46 @@ single1 <- rbind(single1, single2)
 write.csv(single1, "single.three.gram.csv")
 rm(single1, single2)
 
+## Frequencies distribution of each n-gram
 
+# Codes to read the n-gram information:
 
+one.gram.DF <- read.csv("one.gram.DF.csv")[,-1]
+one.gram.DF$Uni <- as.character(one.gram.DF$Uni)
+one.gram.DF$counts <- as.numeric(one.gram.DF$counts)
 
+two.gram.df <- read.csv("two.gram.df.csv"[,-1])
+two.gram.df <- two.gram.df[,-3]
+two.gram.df <- two.gram.df[order(two.gram.df$counts, decreasing = T),]
+two.gram.df$counts <- as.numeric(two.gram.df$counts)
 
+three.gram.df <- read.csv("three.gram.df.csv")[,-1]
+three.gram.df <- three.gram.df[order(three.gram.df$counts, decreasing = T),]
+three.gram.df$counts <- as.numeric(three.gram.df$counts)
 
+# Codes to plot the n-grams distributions
 
+par(mfrow=c(1,3))
+dist.one <- round(0.5*dim(one.gram.DF)[[1]])
+dist.two <- round(0.5*dim(two.gram.df)[[1]])
+dist.three <- round(0.5*dim(three.gram.df)[[1]])
 
-#### restart from executive Summary: https://github.com/jgendron/datasciencecoursera/blob/master/NLP-A%20Model%20to%20Predict%20Word%20Sequences.Rmd
+plot(log10(one.gram.DF$counts[1:dist.one]), ylab = "log10 (Frequency)", xlab = "Top 50% of One-Grams", col="darkslateblue", ylim = c(.00001,6))
 
-profanity <- read.csv("Terms-to-Block.csv")
-profanity <- profanity[-c(1:3),]
-profanity <- rep(profanity$Your.Gateway.to.the.Chrisitan.Audience)
+plot(log10(two.gram.df$counts[1:dist.two]), ylab = "log10 (Frequency)", xlab = "Top 50% of Two-Grams", col="darkslateblue", ylim = c(.00001,6))
 
-# Writes final, processed corpus to disc for building n-grams
-new.data <- c(News.sample,Twitter.sample,Blogs.sample)
-corpus <- Corpus(VectorSource(new.data))
-remove.decimals <- function(x) {gsub("([0-9]*)\\.([0-9]+)", "\\1 \\2", x)}
-remove.hashtags <- function(x) { gsub("#[a-zA-z0-9]+", " ", x)}
-remove.noneng <- function(x) {gsub("\\W+", " ",x)}
+plot(log10(three.gram.df$counts[1:dist.three]), ylab = "log10 (Frequency)", xlab = "Top 50% of Three-Grams", col="darkslateblue", ylim = c(.00001,6))
 
-corpus <- PCorpus(DirSource("en_US",
-                            encoding="UTF-8",mode="text"),dbControl=list(dbName="lastCorpus.db",
-                                                                         dbType="DB1"))
-for (j in seq(corpus)) {
-  corpus <- tm_map(corpus, remove.decimals)
-  corpus <- tm_map(corpus, removeNumbers)
-  corpus <- tm_map(corpus, remove.noneng)
-  corpus <- tm_map(corpus, remove.hashtags)
-  corpus <- tm_map(corpus, stripWhitespace)
-  corpus <- tm_map(corpus, removePunctuation)
-  corpus <- tm_map(corpus, tolower)
-  corpus <- tm_map(corpus, removeWords, stopwords("english"))
-  corpus <- tm_map(corpus, removeWords, profanity)
-}
+# Codes to view frequencies of frequencies:
 
+par(mfrow = c(1,3))
+one.freq.t <- read.csv("one.freq.t.csv")
+two.freq.t <- read.csv("two.freq.t.csv")
+three.freq.t <- read.csv("three.freq.t.csv")
 
+scatter.smooth(log10(one.freq.t$Uni.Var), log10(one.freq.t$Uni.Freq), ylab = "log10 (frequency of frequency)", xlab = "log10 (one-gram count)", col=alpha("black",0.1),ylim=c(.000001,7),xlim=c(.000001,6))
 
+scatter.smooth(log10(two.freq.t$Bi.Var), log10(two.freq.t$Bi.Freq), ylab = "log10 (frequency of frequency)", xlab = "log10 (two-gram count)", col=alpha("black",0.1),ylim=c(.000001,7),xlim=c(.000001,6))
 
-write(corpus,"./corpusTrain.txt") 
-corpus <- tm_map(corpus, tolower); dbInit("lastCorpus.db")
+scatter.smooth(log10(three.freq.t$Tri.Var), log10(three.freq.t$Tri.Freq), ylab = "log10 (frequency of frequency)", xlab = "log10 (three-gram count)", col=alpha("black",0.1),ylim=c(.000001,7),xlim=c(.000001,6))
 
-#package to create N-Grams
-library('tau') 
-
-#pulls out the text element from the corpus
-CORP <- c(corpus[[1]][[1]])
-
-ngram <- function(n) {
-  textcnt(CORP, method = "string", n = as.integer(n),
-          split = "[[:space:][:digit:]]+", decreasing = T)
-}
-
-one.gram <- ngram(1)
-one.gram.df <- data.frame(Uni = names(one.gram), counts = unclass(one.gram))
-
-one.gram.df$Uni <- as.character(one.gram.df$Uni)
-one.gram.df$counts <- as.numeric(one.gram.df$counts)
-
-# Removes the "words" <eos> and <num> from one-gram table:
-one.gram.df <- one.gram.df[which(one.gram.df$Uni!="<eos>"),]
-one.gram.df <- one.gram.df[which(one.gram.df$Uni!="<num>"),]
-
-length.one.gram <- length(one.gram.df$Uni)
-
-
-### not done
-lengthUni<-length(unigramDF$Uni) #253,921 unigrams
-
-# Builds frequency of frequency table for Good-Turing smoothing
-uni.freqfreq<-data.frame(Uni=table(unigramDF$counts))
-
-write.csv(unigramDF,"unigramDF.csv") #2,620 frequencies
-write.csv(uni.freqfreq,"uni.freqfreq.csv")
-rm(unigramDF,uni.freqfreq,CORP,myCorpus)
