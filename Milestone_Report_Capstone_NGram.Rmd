@@ -1,0 +1,210 @@
+---
+title: "Milestone Report - Data Science Project"
+author: "Marcelo Tibau"
+date: "February 14, 2017"
+output: html_document
+---
+
+## Executive Summary
+
+This report provides documentation to describes the process and decisions used on the development of a predictive text model for the Data Science Capstone project. All codes used so far is also shared in this report. The discipline used to perform this task is Natural Language Processing, also know as NLP, and the chosen modeling technique is N-Gram, which is a contiguous sequence of n items from a given sequence of text or speech.  
+
+This project will work on 1-Gram (N: n=1), 2-Gram (N: n=2) and 3-Gram (N: n=3) models. The basic building blocks of the models are unigrams, bigrams, and trigrams. After trying several R libraries, I settled to the following packages: 'tm' for text mining; 'filehash' for database cleaning, 'tau' to build the n-grams, 'scales' and 'wordclound' for visualization. 
+
+I also provide my plans and goals for the an eventual app and algorithm at the end of the present report.
+
+## Data Processing
+
+This section briefly addresses the acquisition, processing, and exploration of the data. The main goal here is to understand the data and determine what should be done with it.The dataset worked was provided by SwiftKey, a software developer, in association with Johns Hopkins University, and comprises Corpora from Blogs, Twitter, and News outlets.
+
+The dataset can be downloaded [here](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip) and is composed of a zip files that includes blog posts, news articles, and Twitter tweets in four languages (English, German, Finnish, and Russian). I decided to work only with the English files.
+
+The libraries used:
+
+```{r}
+library('tm')   
+library('filehash')
+library('tau')
+library('wordcloud')
+library('scales')
+```
+
+I decided to use virtual corpus to read the three data sets, therefore I created 3 folders and associated one corpus per folder:
+
+```{r}
+Twitter <- VCorpus(DirSource("twitter", encoding = "UTF-8"), readerControl = list(language="en"))
+
+Blogs <- VCorpus(DirSource("blogs", encoding = "UTF-8"), readerControl = list(language="en"))
+
+News <- VCorpus(DirSource("news", encoding = "UTF-8"), readerControl = list(language="en"))
+
+```
+
+To split corpora into train, devtest, and test sets, I decided to randomize the order of each corpus and then set the ratio to 60% in order to get the training set and divide the rest into testing and devtest sets.
+
+**Twitter**
+
+```{r}
+set.seed(148)
+perm.twitter <- sample(Twitter[[1]][[1]], length(Twitter[[1]][[1]]))
+TwitR <- round(0.6*length(perm.twitter))
+twitterTrain <- perm.twitter[1:TwitR]
+remain <- perm.twitter[-(1:TwitR)]
+
+DEV <- round(0.5*(length(remain)))
+twitterDevTest <- remain[1:DEV]
+twitterTest <- remain[-(1:DEV)]
+
+write(twitterTrain, "twitterTrain.txt")
+write(twitterDevTest, "twitterDevTest.txt")
+write(twitterTest, "twitterTest.txt")
+
+```
+
+**Blogs**
+
+```{r}
+set.seed(149)
+perm.blog <- sample(Blogs[[1]][[1]], length(Blogs[[1]][[1]]))
+BlogR <- round(0.6*length(perm.blog))
+blogsTrain <- perm.blog[1:BlogR]
+remain2 <- perm.blog[-(1:BlogR)]
+
+DEV2 <- round(0.5*length(remain2))
+blogDevTest <- remain2[1:DEV2]
+blogTest <- remain[-(1:DEV2)]
+
+write(blogsTrain, "blogsTrain.txt")
+write(blogDevTest, "blogDevTest.txt")
+write(blogTest, "blogTest.txt")
+
+```
+
+
+**News**
+
+```{r}
+set.seed(150)
+perm.news <- sample(News[[1]][[1]], length(News[[1]][[1]]))
+NewsR <- round(0.6*length(perm.news))
+newsTrain <- perm.news[1:NewsR]
+remain3 <- perm.news[-(1:NewsR)]
+
+DEV3 <- round(0.5*length(remain3))
+newsDevTest <- remain3[1:DEV3]
+newsTest <- remain3[-(1:DEV3)]
+
+write(newsTrain, "newsTrain.txt")
+write(newsDevTest, "newsDevtest.txt")
+write(newsTest, "newsTest.txt")
+
+```
+
+## Data Cleaning
+
+For this matter I preprocess the dataset to remove profanity and rude words. To do so, I used data from the dataset [FrontGateMedia](www.FrontGateMedia.com) which presents more than 700 such words.
+These words will be used as stopwords later on.
+
+```{r}
+profanity <- read.csv("Terms-to-Block.csv")
+profanity <- profanity[-c(1:3),]
+profanity <- rep(profanity$Your.Gateway.to.the.Chrisitan.Audience)
+
+```
+
+I decided to direct the source to the "trainings" dataset. In order to do that, I added a folder "training" and included the Train.txt (blogs, news, twitter) files in it. I also created a folder named "modified" to hold in-process cleaning data.
+
+```{r}
+Corpus <- PCorpus(DirSource("training", encoding = "UTF-8", mode = "text"),
+                  dbControl = list(dbName="Corpus.db", dbType="DB1"))
+
+```
+
+### Cleaning steps
+
+Codes to convert to lower case, separate hyphenated and slashed words, convert symbol to apostrophe, provide progress to user and create end of sentence markers:
+
+```{r}
+Corpus <- tm_map(Corpus, content_transformer(tolower)); dbInit("Corpus.db")
+
+for(j in seq(Corpus)) {
+  Corpus[[j]][[1]] <- gsub("-", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("/", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("<>", "\\'", Corpus[[j]][[1]])
+  print("3 of 18 transformations complete")
+  Corpus[[j]][[1]] <- gsub("\\. |\\.$","  <EOS> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\? |\\?$","  <EOS> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\! |\\!$","  <EOS> ", Corpus[[j]][[1]])
+  print("6 of 18 transformations complete") 
+}
+```
+
+Code to write corpus to permanent disc:
+
+```{r}
+write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
+```
+
+Codes to reads back, tranforms various ASCII codes to appropriate language, removes all punctuation except apostrophe and <> symbols in <EOS>, removes web site URLs, removes all single letters except "a" and "i":
+
+```{r}
+Corpus <- PCorpus(DirSource("modified", encoding = "UTF-8", mode = "text"),
+                  dbControl = list(dbName="halfCorpus.db", dbType="DB1"))
+
+for(j in seq(Corpus)) {
+  Corpus[[j]][[1]] <- gsub("<85>"," <EOS> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("<92>","'", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\&", " and ", Corpus[[j]][[1]])
+  print("9 of 18 transformations complete")
+  Corpus[[j]][[1]] <- gsub("[^[:alnum:][:space:]\'<>]", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub(" www(.+) ", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub(" [b-hj-z] "," ", Corpus[[j]][[1]])
+  print("12 of 18 transformations complete")
+}
+
+write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
+```
+
+Codes to remove apostrophes introduced by transformations, errant codes in < > brackets, places numbers with a number marker <NUM> for context and the errant <> brackets remaining:
+
+```{r}
+Corpus <- PCorpus(DirSource("modified", encoding="UTF-8", mode = "text"), dbControl = list(dbName="lastCorpus.db", dbType="DB1"))
+
+for(j in seq(Corpus)) {
+  Corpus[[j]][[1]] <- gsub(" ' "," ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("\\' ", " ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub(" ' ", " ", Corpus[[j]][[1]])
+  print("15 of 18 transformations complete")
+  Corpus[[j]][[1]] <- gsub("<[^EOS].+>"," ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("[0-9]+"," <NUM> ", Corpus[[j]][[1]])
+  Corpus[[j]][[1]] <- gsub("<>"," ", Corpus[[j]][[1]])
+  print("18 of 18 transformations complete") 
+}
+```
+
+Code to remove numbers and the "dbInit" function from 'filehash' package to compresses data in RAM:
+
+```{r}
+Corpus <- tm_map(Corpus, removeNumbers); dbInit("lastCorpus.db")
+```
+
+Codes to remove errant 's symbols not as contractions, close brackets starting a word and white spaces such as line breaks:
+
+```{r}
+Corpus[[1]][[1]] <- gsub(" 's"," ", Corpus[[1]][[1]])
+Corpus[[1]][[1]] <- gsub(">[a-z]"," ", Corpus[[1]][[1]])
+
+Corpus <- tm_map(Corpus, stripWhitespace); dbInit("lastCorpus.db") 
+```
+
+Code to Write final, processed corpus to disc for building n-grams:
+
+```{r}
+write(Corpus[[1]][[1]], "./modified/CorpusTrain.txt")
+```
+
+##One-Gram Model
+
+
+
+
