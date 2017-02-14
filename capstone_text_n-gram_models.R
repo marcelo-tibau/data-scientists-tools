@@ -295,6 +295,7 @@ for (k in seq(1, 46, 5)) {
   three.gram.df <- three.gram.df[,-1]
   for (m in 1:4) {
     name <- paste("three.gram.df", (k+m), ".csv", sep = "")
+    temp <- read.csv(name)
     temp <- temp[, -1]
     three.gram.df <- merge(three.gram.df, temp, by.x = "Tri", by.y = "Tri", all = TRUE)
     print(k+m)
