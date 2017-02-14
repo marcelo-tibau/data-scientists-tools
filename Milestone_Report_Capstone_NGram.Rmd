@@ -17,7 +17,7 @@ I also provide my plans and goals for the an eventual app and algorithm at the e
 
 This section briefly addresses the acquisition, processing, and exploration of the data. The main goal here is to understand the data and determine what should be done with it.The dataset worked was provided by SwiftKey, a software developer, in association with Johns Hopkins University, and comprises Corpora from Blogs, Twitter, and News outlets.
 
-The dataset can be downloaded [here](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip) and is composed of a zip files that includes blog posts, news articles, and Twitter tweets in four languages (English, German, Finnish, and Russian). I decided to work only with the English files.
+The dataset can be downloaded [here](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip) and is composed of a zip file that includes blog posts, news articles, and Twitter tweets in four languages (English, German, Finnish, and Russian). I decided to work only with the English files.
 
 The libraries used:
 
