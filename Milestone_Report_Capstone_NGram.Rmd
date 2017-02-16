@@ -715,6 +715,6 @@ scatter.smooth(log10(three.freq.t$Tri.Var), log10(three.freq.t$Tri.Freq), ylab =
 ```
 
 ## Next steps
-**Build a n-gram predicitive app:** The general strategy is: **(1)** use counts based on Good-Turing Discounting to calculate N-Grams via N-Gram clustering. A cluster is a group of words (sometimes a large number) having the same likelihood of appearing in the prediction model. **(2)** use Katz back off (also known as back off n-gram modeling) to estimates the conditional probability of a word given its history in the n-gram. Developed by Slava M. Katz in 1987, it predicts first based on non-zero, higher-order n-grams and  "back off" to a lower-order n-gram if there is zero evidence of the higher-order N-Gram.
+**Build a N-Gram predicitive app:** The general strategy is: **(1)** use counts based on Good-Turing Discounting to calculate N-Grams via N-Gram clustering. A cluster is a group of words (sometimes a large number) having the same likelihood of appearing in the prediction model. **(2)** use Katz back off (also known as back off N-Gram modeling) to estimates the conditional probability of a word given its history in the N-Gram. Developed by Slava M. Katz in 1987, it predicts first based on non-zero, higher-order N-Grams and  "back off" to a lower-order N-gram if there is zero evidence of the higher-order N-Gram.
 
 **Create interactive Shiny App:** This interactive web app will take in text input and return the predicted upcoming terms. It is being considered to allow exploration of the predicted terms through graphs and tables.
