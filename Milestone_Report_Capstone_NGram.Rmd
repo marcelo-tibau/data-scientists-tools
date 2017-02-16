@@ -7,7 +7,7 @@ output: html_document
 
 ## Executive Summary
 
-This report provides documentation to describes the process and decisions used on the development of a predictive text model for the Data Science Capstone project. All codes used so far is also shared in this report. The discipline used to perform this task is Natural Language Processing, also know as NLP, and the chosen modeling technique is N-Gram, which is a special type of wordform that looks *(N - n) words into the past and possesses the memory less properties of a Markov model. In other words, it is a contiguous sequence of n items from a given sequence of text or speech.   
+This report provides documentation to describes the process and decisions used on the development of a predictive text model for the Data Science Capstone project. All codes used so far is also shared in this report. The discipline used to perform this task is Natural Language Processing, also know as NLP, and the chosen modeling technique is N-Gram, which is a special type of wordform that looks *(N - n) words into the past and possesses the memory less properties of a [Markov model](https://en.wikipedia.org/wiki/Markov_chain). In other words, it is a contiguous sequence of n items from a given sequence of text or speech.   
 
 This project will work on 1-Gram (N: n=1), 2-Gram (N: n=2) and 3-Gram (N: n=3) models. The basic building blocks of the models are unigrams, bigrams, and trigrams. After trying several R libraries, I settled to the following packages: 'tm' for text mining; 'filehash' for database cleaning, 'tau' to build the n-grams, 'scales' and 'wordclound' for visualization. 
 
@@ -253,9 +253,9 @@ length(one.gram.DF$Uni)
 wordcloud(one.gram.DF[,1], freq = one.gram.DF[,2], scale = c(5,1), random.order = F, rot.per = 0.5, min.freq = 100, colors = brewer.pal(8, "Dark2"))
 ```
 
-In order to build a predictive model, the strategy selected was to build an n-gram model augmented with Good-Turing Smoothing methods.Good-Turing frequency estimation is a statistical technique for estimating the probability of encountering an object of a hitherto unseen species, given a set of past observations of objects from different species.It was developed by Alan Turing and his assistant Irving John Good as part of their efforts at Bletchley Park to crack German ciphers for the Enigma machine during World War II. Turing at first modeled the frequencies as a multinomial distribution, but found it inaccurate. Good developed smoothing algorithms to improve the estimator's accuracy.
+In order to build a predictive model, the strategy selected was to build an N-Gram model augmented with Good-Turing Smoothing methods. Good-Turing frequency estimation is a statistical technique for estimating the probability of encountering an object of a hitherto unseen species, given a set of past observations of objects from different species. It was developed by Alan Turing and his assistant Irving John Good as part of their efforts at Bletchley Park to crack German ciphers for the Enigma machine during World War II. Turing at first modeled the frequencies as a multinomial distribution, but found it inaccurate. Good developed smoothing algorithms to improve the estimator's accuracy.
 
-It was termed Good-Turing Discounting (also known as Good-Turing smoothing), it became a technique to re-estimate probability mass to assign N-Grams with zero or low counts by discounting from those occurring more often.
+It was termed Good-Turing Discounting (also known as Good-Turing smoothing) and became a technique to re-estimate probability mass to assign N-Grams with zero or low counts by discounting from those occurring more often.
 
 Code to build frequency of frequency table for Good-Turing smoothing:
 
@@ -683,7 +683,7 @@ three.gram.df <- three.gram.df[order(three.gram.df$counts, decreasing = T),]
 three.gram.df$counts <- as.numeric(three.gram.df$counts)
 ```
 
-Codes to plot the n-grams distributions:
+Codes to plot the N-Grams distributions:
 
 ```{r}
 par(mfrow=c(1,3))
@@ -715,6 +715,6 @@ scatter.smooth(log10(three.freq.t$Tri.Var), log10(three.freq.t$Tri.Freq), ylab =
 ```
 
 ## Next steps
-**Build a n-gram predicitive app:** The general strategy is: **(1)** use counts based on Good-Turing Discounting to calculate n-grams via n-gram clustering. A cluster is a group of words (sometimes a large number) having the same likelihood of appearing in the prediction model. **(2)** use Katz back off (also known as back off n-gram modeling) to estimates the conditional probability of a word given its history in the n-gram. Developed by Slava M. Katz in 1987, it predicts first based on non-zero, higher-order n-grams and  "back off" to a lower-order n-gram if there is zero evidence of the higher-order n-gram.
+**Build a n-gram predicitive app:** The general strategy is: **(1)** use counts based on Good-Turing Discounting to calculate N-Grams via N-Gram clustering. A cluster is a group of words (sometimes a large number) having the same likelihood of appearing in the prediction model. **(2)** use Katz back off (also known as back off n-gram modeling) to estimates the conditional probability of a word given its history in the n-gram. Developed by Slava M. Katz in 1987, it predicts first based on non-zero, higher-order n-grams and  "back off" to a lower-order n-gram if there is zero evidence of the higher-order N-Gram.
 
 ***Create interactive Shiny App:** This interactive web app will take in text input and return the predicted upcoming terms. It is being considered to allow exploration of the predicted terms through graphs and tables.
