@@ -29,6 +29,7 @@ twitterTest <- remain[-(1:DEV)]
 write(twitterTrain, "twitterTrain.txt")
 write(twitterDevTest, "twitterDevTest.txt")
 write(twitterTest, "twitterTest.txt")
+rm(list = ls())
 
 # Blogs
 set.seed(149)
@@ -44,6 +45,7 @@ blogTest <- remain[-(1:DEV2)]
 write(blogsTrain, "blogsTrain.txt")
 write(blogDevTest, "blogDevTest.txt")
 write(blogTest, "blogTest.txt")
+rm(list = ls())
 
 # News
 set.seed(150)
@@ -59,6 +61,7 @@ newsTest <- remain3[-(1:DEV3)]
 write(newsTrain, "newsTrain.txt")
 write(newsDevTest, "newsDevtest.txt")
 write(newsTest, "newsTest.txt")
+rm(list = ls())
 
 ## Data cleaning:
 
@@ -164,7 +167,7 @@ n.gram <- function(n) {
 # Codes to build the one-gram model
 one.gram <- n.gram(1)
 one.gram.DF <- data.frame(Uni = names(one.gram), counts = unclass(one.gram))
-
+rm(one.gram)
 one.gram.DF$Uni <- as.character(one.gram.DF$Uni)
 one.gram.DF$counts <- as.numeric(one.gram.DF$counts)
 
@@ -184,6 +187,7 @@ one.freq.t <- data.frame(Uni=table(one.gram.DF$counts))
 # write to csv files to speedy the process later:
 write.csv(one.gram.DF, "one.gram.DF.csv")
 write.csv(one.freq.t, "one.freq.t.csv")
+rm(one.gram.DF, one.freq.t, CORP, Corpus)
 
 ## Two-Gram Model
 # Codes to build the two-gram model. Here we reset the Corpus in order to define a new database to two.gram:
@@ -191,6 +195,7 @@ write.csv(one.freq.t, "one.freq.t.csv")
 Corpus <- PCorpus(DirSource("modified", encoding="UTF-8", mode = "text"), dbControl = list(dbName="twogramCorpus.db", dbType="DB1"))
 
 CORP <- c(Corpus[[1]][[1]])
+rm(Corpus)
 
 # Codes to set the number of loop runs to process 10,000 docs per run:
 step <- trunc(length(CORP)/10000)
@@ -242,7 +247,9 @@ two.gram.df$Uni <- sub(" .*","", two.gram.df$Bi)
 two.freq.t <- data.frame(Bi=table(two.gram.df$counts))
 write.csv(two.gram.df, "two.gram.df.csv")
 write.csv(two.freq.t, "two.freq.t.csv")
-
+rm(temp.two.gram.df, numt, eost, CORPport, two.gram)
+rm(remain, step, name, i, CORP)
+rm(two.gram.df, two.freq.t)
 
 ## Three-gram
 # Codes to build the three-gram model. The deal here is to break large corpus into chunks to deal
