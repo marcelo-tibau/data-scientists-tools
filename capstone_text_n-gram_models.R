@@ -280,7 +280,7 @@ for (i in 1:(step)) {
 
 CORPport <- CORP
 
-# To repeat above loop for the remaining documents (partial step)
+#  To repeat above loop for the remaining documents (partial step)
 three.gram <- n.gram(3)
 names(three.gram) <- gsub("^\'","", names(three.gram))
 three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))

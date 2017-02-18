@@ -1,7 +1,7 @@
 ---
 title: "Milestone Report - Data Science Project"
 author: "Marcelo Tibau"
-date: "February 14, 2017"
+date: "February 18, 2017"
 output: html_document
 ---
 
@@ -302,4 +302,427 @@ two.gram.df <- data.frame(Bi = names(two.gram), counts = unclass(two.gram))
 names(two.gram.df) <- c("Bi", "counts")
 ```
 
-Codes to remove the eos and num 
+Codes to remove the "words" <eos> and <num> from the two-gram database:
+
+```{r}
+eost <- grepl("<eos>", two.gram.df$Bi)
+two.gram.df <- two.gram.df[!eost,]
+numt <- grepl("<num>", two.gram.df$Bi)
+two.gram.df <- two.gram.df[!numt,]
+```
+
+Code to write the N:n=step dataframe:
+
+```{r}
+write.csv(two.gram.df, "two.gram.def.csv")
+```
+
+Codes to remove the processed docs from corpus, provide user progress, remove the "words" <eos> and <num> from the table and create a loop to process the 10,000 docs:
+
+```{r}
+CORP <- CORP[-(1:remain)]
+
+for (i in 1:(step-1)) {
+  CORPport <- CORP[1:10000]
+  two.gram <- n.gram(2)
+  names(two.gram) <- gsub("^\'","", names(two.gram))
+  temp.two.gram.df <- data.frame(Bi = names(two.gram), counts = unclass(two.gram))
+  print(paste("Iteration", i, "of", step))
+  name <- paste("two.gram.df", (i+1), ".csv", sep = "")
+  eost <- grepl("<eos>", temp.two.gram.df$Bi)
+  temp.two.gram.df <- temp.two.gram.df[!eost, ]
+  numt <- grepl("<num>", temp.two.gram.df$Bi)
+  temp.two.gram.df <- temp.two.gram.df[!numt,]
+  write.csv(temp.two.gram.df, name)
+  two.gram.df <- rbind(two.gram.df, temp.two.gram.df)
+  two.gram.df <- aggregate(two.gram.df$counts, list(Bi=two.gram.df$Bi), sum)
+  names(two.gram.df) <- c("Bi", "counts")
+  CORP <- CORP[-(1:10000)]
+}
+
+two.gram.df$Bi <- as.character(two.gram.df$Bi)
+two.gram.df$counts <- as.numeric(two.gram.df$counts)  
+two.gram.df$Uni <- sub(" .*","", two.gram.df$Bi)
+
+```
+
+Codes to build frequency of frequency table for Good-Turing smoothing:
+
+```{r}
+two.freq.t <- data.frame(Bi=table(two.gram.df$counts))
+write.csv(two.gram.df, "two.gram.df.csv")
+write.csv(two.freq.t, "two.freq.t.csv")
+rm(temp.two.gram.df, numt, eost, CORPport, two.gram)
+rm(remain, step, name, i, CORP)
+rm(two.gram.df, two.freq.t)
+```
+
+## Three-Gram Model
+
+Codes to build the three-gram model. The deal here is to break large corpus into chunks to deal with limitations imposed by RAM in R:
+
+```{r}
+Corpus <- PCorpus(DirSource("modified", encoding = "UTF-8", mode = "text"), dbControl = list(dbName="threegramCorpus.db", dbType="DB1"))
+
+CORP <- c(Corpus[[1]][[1]])
+```
+
+Codes to determine the number of loop runs to process to 10,000 docs per run and write the first of N:n=step dataframes:
+
+```{r}
+step <- trunc(length(CORP)/10000)
+
+for (i in 1:(step)) {
+  CORPport <- CORP[1:10000]
+  three.gram <- n.gram(3)
+  names(three.gram) <- gsub("^\'","", names(three.gram))
+  three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))
+  print(paste("Iteration", i, sep = " "))
+  name <- paste("three.gram.df", i, ".csv", sep = "")
+  eost <- grepl("<eos>", three.gram.df$Tri)
+  three.gram.df <- three.gram.df[!eost,]
+  numt <- grepl("<num>", three.gram.df$Tri)
+  three.gram.df <- three.gram.df[!numt,]
+  write.csv(three.gram.df, name)
+  CORP <- CORP[-(1:10000)]
+}
+
+CORPport <- CORP
+```
+
+Codes to repeat the above loop for the remaining documents (partial step):
+
+```{r}
+three.gram <- n.gram(3)
+names(three.gram) <- gsub("^\'","", names(three.gram))
+three.gram.df <- data.frame(Tri = names(three.gram), counts = unclass(three.gram))
+names(three.gram.df) <- c("Tri", "counts")
+name <- paste("three.gram.df", i+1, ".csv", sep = "")
+eost <- grepl("<eos>", three.gram.df$Tri)
+three.gram.df <- three.gram.df[!eost,]
+numt <- grepl("<num>", three.gram.df$Tri)
+three.gram.df <- three.gram.df[!numt, ]
+write.csv (three.gram.df,name)
+```
+
+Codes to aggregate dataframes in groups to develop one three-gram dataframe:
+
+**First round aggregation**
+
+```{r}
+for (k in seq(1, 46, 5)) {
+  key <- paste("three.gram.df", k, ".csv", sep = "")
+  print(k)
+  three.gram.df <- read.csv(file = key)
+  three.gram.df <- three.gram.df[,-1]
+  for (m in 1:4) {
+    name <- paste("three.gram.df", (k+m), ".csv", sep = "")
+    temp <- read.csv(name)
+    temp <- temp[, -1]
+    three.gram.df <- merge(three.gram.df, temp, by.x = "Tri", by.y = "Tri", all = TRUE)
+    print(k+m)
+    rm(temp)
+  }
+  out <- paste("merged.three.g", k, ".csv", sep = "")
+  counts <- three.gram.df[, 2:ncol(three.gram.df)]
+  three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
+  three.gram.df <- three.gram.df[, -(2:(ncol(three.gram.df)-1))]
+  write.csv(three.gram.df, out)
+  rm(three.gram.df, out)
+}
+
+k = k+5
+
+key <- paste("three.gram.df", k, ".csv", sep = "")
+print(k)
+three.gram.df <- read.csv(file = key)
+three.gram.df <- three.gram.df[, -1]
+for (m in 1:3) {
+  name <- paste("three.gram.df", (k+m), ".csv", sep = "")
+  temp <- read.csv(name)
+  temp <- temp[, -1]
+  three.gram.df <- merge(three.gram.df, temp, by.x = "Tri", by.y = "Tri", all = TRUE)
+  print(k+m)
+  rm(temp)
+}
+
+out <- paste("merged.three.g", k, ".csv", sep = "")
+counts <- three.gram.df[,2:ncol(three.gram.df)]
+three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
+three.gram.df <- three.gram.df[,-(2:(ncol(three.gram.df)-1))]
+write.csv(three.gram.df, out)
+rm(three.gram.df, counts)
+```
+
+**Second round aggregation**
+
+```{r}
+for(p in c(1, 11, 21, 31, 41)) {
+  m1 <- paste("merged.three.g", p, ".csv", sep = "")
+  m6 <- paste("merged.three.g", (p+5), ".csv", sep = "")
+  print(m1)
+  print(m6)
+  m1 <- read.csv(m1)[,-1]
+  m6 <- read.csv(m6)[,-1]
+  super <- merge(m1, m6, by.x="Tri", by.y="Tri", all=TRUE)
+  rm(m1,m6)
+  counts <- super[,2:ncol(super)]
+  super$counts <- rowSums(counts, na.rm = TRUE)
+  super <- super[, -(2:(ncol(super)-1))]
+  sup.out <- paste("super.three.g", p, ".csv", sep = "")
+  write.csv(super, sup.out)
+  rm(super, counts)
+}
+
+super.three.51 <- read.csv("merged.three.g51.csv")[,-1]
+write.csv(super.three.51, "super.three.51.csv")
+rm(super.three.51)
+```
+
+**Third round aggregation**
+
+```{r}
+for(p in c(1, 21, 41)) {
+  m1 <- paste("super.three.51", p, ".csv", sep = "")
+  m6 <- paste("super.three.51", (p+10), ".csv", sep = "")
+  print(m1)
+  print(m6)
+  m1 <- read.csv(m1)[,-1]
+  m6 <- read.csv(m6)[,-1]
+  super <- merge(m1, m6, by.x="Tri", by.y="Tri", all=TRUE)
+  rm(m1, m6)
+  counts <- super[, 2:ncol(super)]
+  super$counts <- rowSums(counts, na.rm = TRUE)
+  super <- super[, -(2:(ncol(super)-1))]
+  sup.out <- paste("super.three.2-", p, ".csv", sep = "")
+  write.csv(super, sup.out)
+  rm(super, counts)
+}
+```
+
+Final phases of the aggregation process to build a three-gram dataframe.
+
+**Phase 1**
+
+```{r}
+Al <- read.csv("super.three.2-1.csv")[,-1]
+Al2plus <- Al[which(Al$counts>=2),]
+Alsingles <- Al[which(Al$counts==1),]
+rm(Al)
+
+Be <- read.csv("super.three.2-21.csv")[,-1]
+Be2plus <- Be[which(Be$counts>=2),]
+Besingles <- Be[which(Be$counts==1),]
+rm(Be)
+```
+
+Codes to create aggregated dataframes:
+
+```{r}
+three.gram.df <- merge(Al2plus, Be2plus, by.x="Tri", by.y="Tri", all=TRUE)
+rm(Al2plus, Be2plus)
+write.csv(three.gram.df, "three.gram.df.csv")
+rm(three.gram.df)
+
+singles <- merge(Alsingles, Besingles, by.x="Tri", by.y="Tri", all=TRUE)
+rm(Alsingles, Besingles)
+write.csv(singles, "AlBesinglesInterim.csv")
+
+counts <- singles[,2:ncol(singles)]
+singles$counts <- rowSums(counts, na.rm = TRUE)
+singles <- singles[, -(2:(ncol(singles)-1))]
+rm(counts)
+
+singleBlend <- whics(singles$counts>1)
+singleAdd3 <- singles[singleBlend,]
+write.csv(singleAdd3, "add2three1.cvs")
+rm(singleAdd3,singleBlend)
+singles <- singles[-singblend, ]
+rm(singleBlend)
+
+half <- trunc(length(singles$counts)/2)
+half2 <- length(singles$counts)-half
+
+singlesFirstHalf <- singles[1:half,]
+write.csv(singlesFirstHalf, "firstHalf.csv")
+rm(singlesFirstHalf)
+
+singlesSecondHalf <- singles[-(1:half),]
+write.csv(singlesSecondHalf, "secondHalf.csv")
+rm(singles)
+
+```
+
+**Phase 2**
+
+```{r}
+Ga <- read.csv("super.three.2-41.csv")[,-1]  
+Ga2plus <- Ga[which(Ga$counts>=2),]
+Gasingles <- Ga[which(Ga$counts==1),] 
+rm(Ga)
+
+three.gram.df <- read.csv("three.gram.df.csv")
+three.gram.df <- three.gram.df[,-1]
+three.gram.df <- merge(three.gram.df, Ga2plus, by.x="Tri", by.y="Tri", all=TRUE)
+rm(Ga2plus)
+
+counts <- three.gram.df[,2:ncol(three.gram.df)]
+three.gram.df$counts <- rowSums(counts, na.rm = TRUE)
+three.gram.df <- three.gram.df[, -(2:(ncol(three.gram.df)-1))]
+rm(counts)
+write.csv(three.gram.df, "three.gram.df.csv")
+rm(three.gram.df)
+
+singles <- merge(singlesSecondHalf, Gasingles, by.x="Tri", by.y="Tri", all=TRUE)
+rm(singlesSecondHalf)
+
+counts <- singles[, 2:ncol(singles)]
+singles$counts <- rowSums(counts, na.rm = TRUE)
+singles <- singles[, -(2:(ncol(singles)-1))]
+rm(counts)
+
+singleBlend <- which(singles$counts>1)
+singleAdd3 <- singles[singleBlend,]
+write.csv(singleAdd3, "add2three2.csv")
+rm(singleBlend, singles)
+
+singles <- singles[-singleBlend,]
+write.csv(singles, "half.real.singles2.csv")
+rm(singleBlend, singles)
+
+firstHalf <- read.csv("firstHalf.csv")
+firstHalf <- firstHalf[,-1]
+singles <- merge(firstHalf, Gasingles, by.x="Tri", by.y="Tri", all=TRUE)
+rm(Gasingles, firstHalf)
+
+counts <- singles[,2:ncol(singles)]
+singles$counts <- rowSums(counts, na.rm = TRUE)
+singles <- singles[,-(2:(ncol(singles)-1))]
+rm(counts)
+
+singleBlend <- which(singles$counts>1)
+singleAdd3 <- singles[singleBlend,]
+write.csv(singleAdd3, "add2three3.csv")
+rm(singleAdd3)
+
+singles <- singles[-singleBlend,]
+rm(singleBlend)
+write.csv(singles, "half.real.singles1.csv")
+rm(singles)
+```
+
+Codes to bind it all together:
+
+```{r}
+three.gram.df <- read.csv("three.gram.df.csv")
+three.gram.df <- three.gram.df[,-1]
+
+one <- read.csv("add2three1.csv")
+one <- one[-1]
+three.gram.df <- rbind(three.gram.df, one)
+rm(one)
+
+two <- read.csv("add2three2.csv")
+two <- two[-1]
+three.gram.df <- rbind(three.gram.df, two)
+rm(two)
+
+three <- read.csv("add2three3.csv")
+three <- three[-1]
+three.gram.df <- rbind(three.gram.df, three)
+rm(three)
+
+write.csv(three.gram.df, "three.gram.df.csv")
+```
+
+Codes to prepare the dataset:
+
+```{r}
+three.gram.df$Tri <- as.character(three.gram.df$Tri)
+three.gram.df$counts <- as.numeric(three.gram.df$counts)
+two.gram <- sub(" ","@@@@",three.gram.df$Tri)
+two.gram <- sub(" .*","", two.gram)
+three.gram.df$Bi <- sub("@@@@"," ", two.gram)
+rm(two.gram)
+
+three.gram.df$Uni <- sub(".* ","", three.gram.df$Bi)
+three.gram.df$w3 <- sub(".* ","", three.gram.df$Tri)
+```
+
+Codes to build frequency of frequency table for Good-Turing smoothing:
+
+```{r}
+three.freq.t <- data.frame(Tri=table(three.gram.df$counts))
+write.csv(three.gram.df[,-1], "three.gram.df.csv")
+write.csv(three.freq.t, "three.freq.t.csv")
+rm(three.freq.t, three.gram.df)
+```
+
+Codes to create dataframe of singleton three-grams:
+
+```{r}
+single1 <- read.csv("half.real.singles1.csv")
+single1 <- single1[,-1]
+
+single2 <- read.csv("half.real.singles2.csv")
+single2 <- single2[,-1]
+
+single1 <- rbind(single1, single2)
+write.csv(single1, "single.three.gram.csv")
+rm(single1, single2)
+```
+
+## Frequencies distribution of each n-gram
+
+Codes to read the n-gram information:
+
+```{r}
+one.gram.DF <- read.csv("one.gram.DF.csv")[,-1]
+one.gram.DF$Uni <- as.character(one.gram.DF$Uni)
+one.gram.DF$counts <- as.numeric(one.gram.DF$counts)
+
+two.gram.df <- read.csv("two.gram.df.csv"[,-1])
+two.gram.df <- two.gram.df[,-3]
+two.gram.df <- two.gram.df[order(two.gram.df$counts, decreasing = T),]
+two.gram.df$counts <- as.numeric(two.gram.df$counts)
+
+three.gram.df <- read.csv("three.gram.df.csv")[,-1]
+three.gram.df <- three.gram.df[order(three.gram.df$counts, decreasing = T),]
+three.gram.df$counts <- as.numeric(three.gram.df$counts)
+```
+
+Codes to plot the N-Grams distributions:
+
+```{r}
+par(mfrow=c(1,3))
+dist.one <- round(0.5*dim(one.gram.DF)[[1]])
+dist.two <- round(0.5*dim(two.gram.df)[[1]])
+dist.three <- round(0.5*dim(three.gram.df)[[1]])
+
+plot(log10(one.gram.DF$counts[1:dist.one]), ylab = "log10 (Frequency)", xlab = "Top 50% of One-Grams", col="darkslateblue", ylim = c(.00001,6))
+
+plot(log10(two.gram.df$counts[1:dist.two]), ylab = "log10 (Frequency)", xlab = "Top 50% of Two-Grams", col="darkslateblue", ylim = c(.00001,6))
+
+plot(log10(three.gram.df$counts[1:dist.three]), ylab = "log10 (Frequency)", xlab = "Top 50% of Three-Grams", col="darkslateblue", ylim = c(.00001,6))
+```
+
+Codes to show frequencies of frequencies:
+
+```{r}
+par(mfrow = c(1,3))
+one.freq.t <- read.csv("one.freq.t.csv")
+two.freq.t <- read.csv("two.freq.t.csv")
+three.freq.t <- read.csv("three.freq.t.csv")
+
+scatter.smooth(log10(one.freq.t$Uni.Var), log10(one.freq.t$Uni.Freq), ylab = "log10 (frequency of frequency)", xlab = "log10 (one-gram count)", col=alpha("black",0.1),ylim=c(.000001,7),xlim=c(.000001,6))
+
+scatter.smooth(log10(two.freq.t$Bi.Var), log10(two.freq.t$Bi.Freq), ylab = "log10 (frequency of frequency)", xlab = "log10 (two-gram count)", col=alpha("black",0.1),ylim=c(.000001,7),xlim=c(.000001,6))
+
+scatter.smooth(log10(three.freq.t$Tri.Var), log10(three.freq.t$Tri.Freq), ylab = "log10 (frequency of frequency)", xlab = "log10 (three-gram count)", col=alpha("black",0.1),ylim=c(.000001,7),xlim=c(.000001,6))
+
+```
+
+## Next steps
+**Build a N-Gram predicitive app:** The general strategy is: **(1)** use counts based on Good-Turing Discounting to calculate N-Grams via N-Gram clustering. A cluster is a group of words (sometimes a large number) having the same likelihood of appearing in the prediction model. **(2)** use Katz back off (also known as back off N-Gram modeling) to estimates the conditional probability of a word given its history in the N-Gram. Developed by Slava M. Katz in 1987, it predicts first based on non-zero, higher-order N-Grams and  "back off" to a lower-order N-gram if there is zero evidence of the higher-order N-Gram.
+
+**Create interactive Shiny App:** This interactive web app will take in text input and return the predicted upcoming terms. It is being considered to allow exploration of the predicted terms through graphs and tables.
