@@ -208,7 +208,7 @@ names(two.gram) <- gsub("^\'","", names(two.gram))
 two.gram.df <- data.frame(Bi = names(two.gram), counts = unclass(two.gram))
 names(two.gram.df) <- c("Bi", "counts")
 
-# Codes to remove the "words" <eos> and <num> from the two-gram database:
+# Codes to remove the "words" "<eos>" and "<num>" from the two-gram database:
 eost <- grepl("<eos>", two.gram.df$Bi)
 two.gram.df <- two.gram.df[!eost,]
 numt <- grepl("<num>", two.gram.df$Bi)
