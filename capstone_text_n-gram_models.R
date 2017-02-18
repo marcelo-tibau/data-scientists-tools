@@ -295,7 +295,7 @@ write.csv (three.gram.df,name)
 # Codes to aggregate dataframes in groups to develop one three-gram dataframe:
 # First round aggregation
 
-for (k in seq(1, 46, 5)) {
+for (k in seq(1,46,5)) {
   key <- paste("three.gram.df", k, ".csv", sep = "")
   print(k)
   three.gram.df <- read.csv(file = key)
@@ -340,7 +340,7 @@ rm(three.gram.df, counts)
 
 # Second round aggregation
 
-for(p in c(1, 11, 21, 31, 41)) {
+for(p in c(1,11,21,31,41)) {
   m1 <- paste("merged.three.g", p, ".csv", sep = "")
   m6 <- paste("merged.three.g", (p+5), ".csv", sep = "")
   print(m1)
@@ -357,13 +357,13 @@ for(p in c(1, 11, 21, 31, 41)) {
   rm(super, counts)
 }
 
-super.three.51 <- read.csv("merged.three.g51.csv")[,-1]
+super.three.51 <- read.csv("merged.three.g11.csv")[,-1]
 write.csv(super.three.51, "super.three.51.csv")
 rm(super.three.51)
 
 # Third round aggregation       
 
-for(p in c(1, 21, 41)) {
+for(p in c(1,21,41)) {
   m1 <- paste("super.three.51", p, ".csv", sep = "")
   m6 <- paste("super.three.51", (p+10), ".csv", sep = "")
   print(m1)
@@ -380,7 +380,7 @@ for(p in c(1, 21, 41)) {
   rm(super, counts)
 }
 
-# Final phases to aggregartion process to build a three-gram dataframe
+# Final phases to aggregation process to build a three-gram dataframe
 # Phase 1
 
 Al <- read.csv("super.three.2-1.csv")[,-1]
@@ -408,7 +408,7 @@ singles$counts <- rowSums(counts, na.rm = TRUE)
 singles <- singles[, -(2:(ncol(singles)-1))]
 rm(counts)
 
-singleBlend <- whics(singles$counts>1)
+singleBlend <- which(singles$counts>1)
 singleAdd3 <- singles[singleBlend,]
 write.csv(singleAdd3, "add2three1.cvs")
 rm(singleAdd3,singleBlend)
