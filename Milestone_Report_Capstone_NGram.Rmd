@@ -27,6 +27,8 @@ library('filehash')
 library('tau')
 library('wordcloud')
 library('scales')
+library('stringi')
+library('stringr')
 ```
 
 I decided to use virtual corpus to read the three data sets, therefore I created 3 folders and associated one corpus per folder:
@@ -38,6 +40,96 @@ Blogs <- VCorpus(DirSource("blogs", encoding = "UTF-8"), readerControl = list(la
 
 News <- VCorpus(DirSource("news", encoding = "UTF-8"), readerControl = list(language="en"))
 
+```
+
+**Basic readings and analysis on Twitter data:**
+
+```{r}
+twitterWords <- stringi::stri_count_words(Twitter)
+summary(twitterWords)
+range(twitterWords)
+
+twitterStats <- stringi::stri_stats_general(Twitter)
+twitterStats
+range(twitterStats)
+
+sampleReading_twitter <- Twitter[sample(1:length(Twitter), 30000)]
+twitterStatsSR <- stringi::stri_stats_general(sampleReading_twitter)
+twitterStatsSR
+```
+
+**Basic readings and analysis on News data:**
+
+```{r}
+newsWords <- stringi::stri_count_words(News)
+summary(newsWords)
+range(newsWords)
+
+newsStats <- stringi::stri_stats_general(News)
+newsStats
+range(newsStats)
+
+sampleReading_news <- News[sample(1:length(News), 30000)]
+newsStatsSR <- stringi::stri_stats_general(sampleReading_news)
+newsStatsSR
+```
+
+**Basic readings and analysis on Blogs data:**
+
+```{r}
+blogsWords <- stringi::stri_count_words(Blogs)
+summary(blogsWords)
+range(blogsWords)
+
+blogsStats <- stringi::stri_stats_general(Blogs)
+blogsStats
+range(blogsStats)
+
+sampleReading_blogs <- Blogs[sample(1:length(Blogs), 30000)]
+blogsStatsSR <- stringi::stri_count_words(sampleReading_blogs)
+blogsStatsSR
+```
+
+**Basic Exploratory Analysis**
+
+Sampling the data sets:
+
+```{r}
+set.seed(148)
+Twitter.sample <- sample(Twitter, length(Twitter)*0.10, replace = FALSE)
+
+News.sample <- sample(News, length(News)*0.10, replace = FALSE)
+
+Blogs.sample <- sample(Blogs, length(Blogs)*0.10, replace = FALSE)
+```
+
+Inspecting the provided Datasets:
+
+```{r}
+summary(nchar(News.sample))
+hist(News.sample)
+```
+
+```{r}
+summary(Blogs)
+summary(nchar(Blogs))
+summary(Twitter)
+summary(nchar(Twitter))
+summary(News)
+summary(nchar(News))
+```
+
+Some info about the data (MB and lines) and summaries:
+
+```{r}
+format(object.size(News), units = "MB")
+length(News)
+
+format(object.size(Twitter), units = "MB")
+length(Twitter)
+
+format(object.size(Blogs), units = "MB")
+length(Blogs)
 ```
 
 To split corpora into train, devtest, and test sets, I decided to randomize the order of each corpus and then set the ratio to 60% in order to get the training set and divide the rest into testing and devtest sets.
