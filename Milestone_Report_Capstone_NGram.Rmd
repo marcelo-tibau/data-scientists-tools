@@ -277,9 +277,10 @@ for(j in seq(Corpus)) {
 }
 ```
 
-Code to remove numbers and the "dbInit" function from 'filehash' package to compresses data in RAM:
+Code to remove profanity, numbers and the "dbInit" function from 'filehash' package to compresses data in RAM:
 
 ```{r}
+Corpus <- tm_map(Corpus, removeWords, profanity)
 Corpus <- tm_map(Corpus, removeNumbers); dbInit("lastCorpus.db")
 ```
 
